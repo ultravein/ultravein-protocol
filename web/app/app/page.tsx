@@ -145,13 +145,14 @@ export default function AppPage() {
         await loadMine(c.address);
         setMsg(`${TIERS[n - 1].name} is yours. It mines without holding.`);
       }),
-    startSession: () =>
+    // binds the terminal that printed `code` to this wallet's rig
+    linkNode: (code: string) =>
       run(async () => {
         const { address } = await ensure();
-        const a = { action: "session" as const, address, ts: nowSec() };
-        await signAndPost("/api/session", a, messageFor(a));
+        const a = { action: "link" as const, address, code, ts: nowSec() };
+        await signAndPost("/api/node/link", a, messageFor(a));
         await loadMine(address);
-        setMsg("Session started. Your rig is running.");
+        setMsg("Terminal linked. Run node rig.mjs start to mine.");
       }),
     claim: (asset: string) =>
       run(async () => {

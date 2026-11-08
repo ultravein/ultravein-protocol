@@ -3,6 +3,7 @@
 // Usage: node scripts/seed-fork.mjs <pool> <token> [hours=6]
 import { createPublicClient, createTestClient, createWalletClient, http, parseAbi, parseEther, zeroAddress } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { linkAndBeat } from "./rig-node.mjs";
 
 const [pool, token, hoursArg] = process.argv.slice(2);
 const HOURS = Number(hoursArg ?? 6);
@@ -37,9 +38,8 @@ for (const a of AGENTS) {
   const ts = Math.floor(Date.now() / 1000);
   const agentMsg = ["ultravein rig", `address: ${addr}`, `name: ${a.name}`, `tier: ${a.tier}`, `asset: ${a.asset}`, `ts: ${ts}`].join("\n");
   console.log(a.name, await post("/api/agent", { address: addr, name: a.name, tier: a.tier, asset: a.asset, ts, signature: await acct.signMessage({ message: agentMsg }) }));
-  const t2 = ts + 1;
-  const sessMsg = ["ultravein session", `address: ${addr}`, `ts: ${t2}`].join("\n");
-  console.log(a.name, (await post("/api/session", { address: addr, ts: t2, signature: await acct.signMessage({ message: sessMsg }) })).ok ? "session ok" : "session failed");
+  const rig = await linkAndBeat(post, acct, addr);
+  console.log(a.name, rig.beat.powered ? `terminal ${rig.code} online` : `terminal failed ${JSON.stringify(rig.beat)}`);
   console.log(`  ${a.name}: ${addr}`);
 }
 

@@ -504,6 +504,17 @@ input { background: var(--bg); color: var(--text); border: 1px solid var(--line-
 .gpu em.gpu__tag.is-owned { color: var(--violet); }
 .gpu__buy { margin-top: 8px; width: 100%; justify-content: center; }
 .btn--sm { padding: 7px 10px; font-size: 12px; }
+/* terminal steps: numbered rows, each command in a dark mono block */
+.term-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.term-steps > li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; }
+.term-steps > li > span { font: 12px var(--mono); color: var(--violet); padding-top: 2px; }
+.term-steps b { color: var(--bright); font-size: 14px; }
+.term-steps p { margin: 4px 0 6px; font-size: 13px; color: var(--text); }
+.term-steps a { color: var(--violet); }
+.term { margin: 0; padding: 10px 12px; background: #141018; color: #e9e2fa; font: 12px/1.6 var(--mono); overflow-x: auto; white-space: pre; user-select: all; }
+.term::before { content: "$ "; color: #a78bfa; }
+.term-link { display: flex; gap: 8px; margin-top: 6px; }
+.term-link input { flex: 1; min-width: 0; font-family: var(--mono); letter-spacing: 0.08em; }
 .chip--btn { cursor: pointer; font: inherit; font-size: 12px; letter-spacing: 0.12em; padding: 8px 14px; }
 .chip--btn.is-on { background: var(--metal-lit); color: #ffffff; border-color: #140f1c40; font-weight: 600; }
 .rig--preview { clip-path: none; }

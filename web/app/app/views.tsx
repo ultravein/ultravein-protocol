@@ -15,6 +15,7 @@ export type Me = {
   balance: string;
   effectiveTier: TierId | null;
   owned: TierId | null; // VGA bought from the shop, kept for good
+  node: string | null; // terminal node linked to this rig
   perHour: string;
   earned: Record<string, string>;
   wallet: Record<string, string>;
@@ -40,7 +41,7 @@ export type Dash = {
   busy: boolean;
   saveAgent: (name: string, tier: TierId, asset: string) => void;
   buyCard: (tier: TierId) => void;
-  startSession: () => void;
+  linkNode: (code: string) => void;
   claim: (asset: string) => void;
   go: (tab: string) => void;
 };
@@ -133,7 +134,7 @@ export function Overview({ d }: { d: Dash }) {
         <Tile i={2} label="Est. per hour" value={running ? fmt(me?.perHour ?? "0") : "—"} sub={running ? symbolOf(running.asset) : "start a session"} />
         <Tile i={3} label="Earned" value={fmt(me?.earned?.[asset] ?? "0")} sub={`${symbolOf(asset)} · ${claimableAssets} claimable`} />
       </div>
-      {/* row 1: your VGA in 3D beside the 12-hour block rail */}
+      {/* row 1: your VGA in 3D beside its terminal and uptime blocks */}
       <div className="dgrid dgrid--1-2">
         <Panel title={me?.agent ? me.agent.name : "Your VGA"} aside={<span className={`state ${running ? "is-on" : ""}`}>{running ? "mining" : "idle"}</span>}>
           <div className={`agent-stage ${running ? "is-live" : ""}`}>
@@ -149,13 +150,13 @@ export function Overview({ d }: { d: Dash }) {
             )}
           </div>
         </Panel>
-        <Panel title="The 12-hour dig" aside={<span className="label">{running ? `${hms(running.end - d.now)} left` : "ready"}</span>}>
+        <Panel title="Terminal" aside={<span className={`state ${running ? "is-on" : ""}`}>{running ? "online" : me?.node ? "offline" : "not linked"}</span>}>
           <div className="session">
             <HourBlocks progress={elapsed} running={!!running} />
             {running ? (
-              <p className="muted">Mining {symbolOf(running.asset)} on {eff?.name ?? "no VGA"}. Each lit block is an hour already settled.</p>
+              <p className="muted">Mining {symbolOf(running.asset)} on {eff?.name ?? "no VGA"} · up {hms(d.now - running.start)}. Each lit block is an hour your terminal stayed on.</p>
             ) : (
-              <button className="btn" onClick={d.startSession} disabled={d.busy || !me?.agent}>Start mining</button>
+              <p className="muted">{me?.node ? <>Your VGA mines while its terminal runs. Start it with <code>node rig.mjs start</code>.</> : <>Link a terminal on the <button className="linkbtn" onClick={() => d.go("create")}>Deploy VGA</button> tab, then run <code>node rig.mjs start</code>.</>}</p>
             )}
           </div>
         </Panel>
@@ -169,6 +170,36 @@ export function Overview({ d }: { d: Dash }) {
         </Panel>
       </div>
     </>
+  );
+}
+
+// --- Terminal ----------------------------------------------------------------------
+
+/** Run the rig from a terminal: download, init (prints a code), paste the code here, start. */
+function TerminalPanel({ d }: { d: Dash }) {
+  const [origin, setOrigin] = useState("");
+  const [code, setCode] = useState("");
+  useEffect(() => setOrigin(location.origin), []); // after mount, so server and client render alike
+  const node = d.me?.node;
+  const cmds = [`curl -fsSLo rig.mjs ${origin}/rig.mjs`, `node rig.mjs init ${origin}`, "node rig.mjs start"];
+  return (
+    <Panel title="04 · Run it from your terminal" aside={<span className={`state ${node ? "is-on" : ""}`}>{node ? `node ${node.slice(0, 6)}…` : "no node yet"}</span>}>
+      <ol className="term-steps">
+        <li><span>01</span><div><b>Get the rig</b><p>Needs Node.js 18+. <a href="/rig.mjs" download>Download rig.mjs</a> or run:</p><pre className="term">{cmds[0]}</pre></div></li>
+        <li><span>02</span><div><b>Make a node</b><p>It prints a code like <code>UV-8K2F-QX7M-41PD</code>.</p><pre className="term">{cmds[1]}</pre></div></li>
+        <li>
+          <span>03</span>
+          <div>
+            <b>Paste the code</b>
+            <div className="term-link">
+              <input placeholder="UV-XXXX-XXXX-XXXX" aria-label="Node code" value={code} maxLength={17} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+              <button className="btn" onClick={() => d.linkNode(code.trim())} disabled={d.busy || !/^UV-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/.test(code.trim())}>Link</button>
+            </div>
+          </div>
+        </li>
+        <li><span>04</span><div><b>Start mining</b><p>Your VGA mines while this runs. Close it and it stops within 10 minutes.</p><pre className="term">{cmds[2]}</pre></div></li>
+      </ol>
+    </Panel>
   );
 }
 
@@ -237,6 +268,7 @@ export function DeployVga({ d }: { d: Dash }) {
             </div>
             <p className="fine">Tokenized stocks are not available to US persons. Changes apply from your next session.</p>
           </Panel>
+          <TerminalPanel d={d} />
         </div>
         <div className="stack">
           <Panel title="Preview">
@@ -260,7 +292,7 @@ export function DeployVga({ d }: { d: Dash }) {
           </Panel>
           <Panel title="After deploying">
             <ol className="checklist checklist--tight">
-              <li><span>01</span><div><b>Start a session</b><p>12 hours of mining, from the Machine tab.</p></div></li>
+              <li><span>01</span><div><b>Run the terminal</b><p><code>node rig.mjs start</code>: it mines while it stays open.</p></div></li>
               <li><span>02</span><div><b>Keep it powered</b><p>A held VGA needs your balance through each hour. A bought one does not.</p></div></li>
               <li><span>03</span><div><b>Claim</b><p>From Portfolio, once a root passes its 30-minute window.</p></div></li>
             </ol>
@@ -286,14 +318,14 @@ export function Machine({ d }: { d: Dash }) {
   const checks: [string, boolean, string][] = [
     ["Signature", !!me?.agent, me?.agent ? "rig signed by this wallet" : "deploy a VGA first"],
     ["Hold check", !!eff, eff ? `balance covers ${eff.name}` : `hold ${fmt(TIERS[0].minHold)} to mine`],
-    ["Session", !!running, running ? `${hms(running.end - d.now)} left` : "no session running"],
+    ["Terminal", !!running, running ? `online · up ${hms(d.now - running.start)}` : me?.node ? "run node rig.mjs start" : "link a terminal first"],
     ["Split-proof tiers", true, "one wallet, one rig"],
     ["Release cap", true, "pool pays at most 5% a day"],
   ];
   return (
     <>
       <Head kicker="03" title="Machine">
-        {running ? <span className="state is-on">running</span> : <button className="btn" onClick={d.startSession} disabled={d.busy || !me?.agent}>Start mining</button>}
+        <span className={`state ${running ? "is-on" : ""}`}>{running ? "terminal online" : "terminal offline"}</span>
       </Head>
       <ConnectHint d={d} />
       <div className="dgrid dgrid--2-1">
@@ -301,7 +333,7 @@ export function Machine({ d }: { d: Dash }) {
           <Gpu3D tier={shown.id} running={!!running && shown.id === (eff ?? chosen)?.id} label={shown.name} />
           <div className="meter">
             <div className="meter__bar"><i style={{ transform: `scaleX(${Math.min(1, progress)})` }} /></div>
-            <div className="meter__row"><span className="label">Session</span><span>{running ? `${Math.floor(progress * 100)}% · ${hms(running.end - d.now)} left` : "idle"}</span></div>
+            <div className="meter__row"><span className="label">Uptime · last 12h</span><span>{running ? `${Math.floor(Math.min(1, progress) * 100)}% · up ${hms(d.now - running.start)}` : "terminal offline"}</span></div>
           </div>
         </Panel>
         <div className="stack">

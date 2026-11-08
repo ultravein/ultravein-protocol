@@ -67,6 +67,17 @@ export const setSession = (a: string, s: Session) => setJson(`session:${a}`, s);
 export const getLastTs = (a: string) => getJson<number>(`lastTs:${a}`);
 export const setLastTs = (a: string, ts: number) => setJson(`lastTs:${a}`, ts);
 
+// --- terminal nodes: a node is an Ed25519 key a wallet linked to its rig ---------------
+export type Pair = { node: string; exp: number };
+export const getPair = (code: string) => getJson<Pair>(`pair:${code}`);
+export const setPair = (code: string, p: Pair) => setJson(`pair:${code}`, p);
+export const getNodeOwner = (node: string) => getJson<string>(`node:${node}`);
+export const setNodeOwner = (node: string, wallet: string) => setJson(`node:${node}`, wallet);
+export const getWalletNode = (wallet: string) => getJson<string>(`rignode:${wallet}`);
+export const setWalletNode = (wallet: string, node: string) => setJson(`rignode:${wallet}`, node);
+export const getNodeTs = (node: string) => getJson<number>(`nodeTs:${node}`);
+export const setNodeTs = (node: string, ts: number) => setJson(`nodeTs:${node}`, ts);
+
 /** Cumulative allocations, keys `${account}:${asset}`. */
 export async function getAcc() {
   const raw = (await getJson<Record<string, string>>("acc")) ?? {};

@@ -19,6 +19,9 @@ import { MAX_SKEW_SECONDS } from "@/lib/auth";
 const REV = "rev 2026.10";
 const PCT_PER_HOUR = Number(EMISSION_PPM) / 10_000; // 1000 ppm = 0.1%
 const SESSION_H = SESSION_SECONDS / 3600;
+const BEAT_MIN = 5;
+const WINDOW_MIN = 10;
+const PAIR_MIN = 30;
 const VETO_MIN = CHALLENGE_DELAY / 60;
 
 // --- small building blocks ---------------------------------------------------------
@@ -84,13 +87,13 @@ const CHAPTERS: Chapter[] = [
     keys: "intro what vga mining pool robinhood",
     body: (
       <>
-        <p className="mlead">Ultravein lets every holder <b>put a VGA on the vein</b>. Deploy one free with what you hold, or buy one from us for good, then run it in {SESSION_H}-hour sessions. Every hour it stays powered it draws a share of the pool you chose: ETH, {TOKEN_SYMBOL}, or a tokenized stock.</p>
+        <p className="mlead">Ultravein lets every holder <b>put a VGA on the vein</b>. Deploy one free with what you hold, or buy one from us for good, then switch it on from a terminal. Every hour it stays on it draws a share of the pool you chose: ETH, {TOKEN_SYMBOL}, or a tokenized stock.</p>
         <p>No hardware involved: every VGA is virtual. Bigger VGAs mine faster; a held one needs more {TOKEN_SYMBOL} to power on, a bought one needs none.</p>
         <Table
           head={["Part", "What it is"]}
           rows={[
             ["Rig", "Your miner. One per wallet, with a name, a VGA and a reward vein."],
-            ["Shift", `A ${SESSION_H}-hour run. Start it with a signature, restart it when it ends.`],
+            ["Terminal", "node rig.mjs start: the switch. The rig mines while it runs."],
             ["VGA", "The card your rig runs, held (unlocked by balance) or bought (yours for good)."],
             ["Pool", "One bucket per reward asset, funded by the project."],
             ["Epoch", `${EPOCH_SECONDS / 60} minutes. Rewards are measured and settled per epoch.`],
@@ -112,7 +115,7 @@ const CHAPTERS: Chapter[] = [
           <li><b>Hold {TOKEN_SYMBOL}.</b> At least {fmt(TIERS[0].minHold)} for the smallest machine.</li>
           <li><b>Connect your wallet</b> from the header. The site never sends anything without your confirmation.</li>
           <li><b>Deploy a VGA</b> in the dashboard: pick a VGA (or buy one), a name and a reward. Sign once.</li>
-          <li><b>Start a shift</b> from Overview or Machine. Sign once more. Your VGA mines for {SESSION_H} hours.</li>
+          <li><b>Run the terminal:</b> <code>node rig.mjs init</code>, paste the code on Deploy VGA, then <code>node rig.mjs start</code>. It mines while it runs.</li>
           <li><b>Claim</b> from Portfolio once a payout root has passed its {VETO_MIN}-minute window.</li>
         </ol>
         <Note kind="warn">Tokenized stocks are not available to US persons.</Note>
@@ -152,19 +155,25 @@ const CHAPTERS: Chapter[] = [
     ),
   },
   {
-    id: "shifts",
-    title: "Digs (shifts)",
-    summary: `${SESSION_H} hours on the vein, then clock in again.`,
-    keys: "shift session start restart 12h idle",
+    id: "terminal",
+    title: "Run your rig (terminal)",
+    summary: "One command on; it mines while the terminal runs.",
+    keys: "terminal command node rig.mjs init start code link heartbeat uptime cli",
     body: (
       <>
-        <p>A shift starts the moment your signature is accepted and ends exactly {SESSION_H} hours later. The machine and reward are frozen for that shift.</p>
+        <p>Your VGA is switched on from a terminal, like a mining rig. The terminal holds a small <b>node key</b> (Ed25519) that signs a heartbeat. That key holds no funds and can claim nothing; claims always go through your wallet.</p>
+        <Code lang="terminal">{`curl -fsSLo rig.mjs https://<this site>/rig.mjs   # or download it from the Deploy page
+node rig.mjs init https://<this site>             # prints a code: UV-XXXX-XXXX-XXXX
+                                                  # paste it on Deploy VGA, sign with your wallet
+node rig.mjs start                                # mines while this stays open`}</Code>
         <ul className="mlist">
-          <li>A new shift can start only when none is running.</li>
-          <li>Starting needs at least {fmt(TIERS[0].minHold)} {TOKEN_SYMBOL} in the wallet at that moment.</li>
-          <li>Seconds count: a shift that covers 20 minutes of an epoch earns for 20 minutes of it.</li>
-          <li>An idle rig earns nothing. That is the point: abandoned rigs stop drawing from the pool.</li>
+          <li>Needs Node.js 18 or newer and nothing else. The key is saved in <code>~/.ultravein/rig.json</code>.</li>
+          <li>A code lasts {PAIR_MIN} minutes and works once. Running <code>init</code> again keeps the same key and prints a fresh code.</li>
+          <li>The terminal sends a heartbeat every {BEAT_MIN} minutes. Each one keeps the rig mining for {WINDOW_MIN} minutes, so closing the terminal stops it within {WINDOW_MIN} minutes.</li>
+          <li>Linking a new node retires the old one. One wallet runs one rig: extra terminals add nothing.</li>
+          <li>Seconds count: a rig online for 20 minutes of an epoch earns for 20 minutes of it.</li>
         </ul>
+        <Note kind="rule">The node key only proves the terminal is running. It cannot move tokens, change your rig or claim, so a leaked key can at most switch your rig on.</Note>
       </>
     ),
   },
@@ -344,7 +353,7 @@ error OverCap(asset)  BadProof  NothingToClaim  OverCommitted  PendingExists
             ["GET", <code key="4">/api/history?address=</code>, "hist[] per epoch, act[] activity log"],
             ["GET", <code key="5">/api/proof?address=&asset=</code>, "cumulative, claimable, proof[]"],
             ["POST", <code key="6">/api/agent</code>, "deploy or update your rig (signed)"],
-            ["POST", <code key="7">/api/session</code>, "start a shift (signed)"],
+            ["POST", <code key="7">/api/node/init</code>, "terminal: node key proves itself, gets a code"],
           ]}
         />
         <Code lang="GET /api/proof">{`{
@@ -363,16 +372,18 @@ error OverCap(asset)  BadProof  NothingToClaim  OverCommitted  PendingExists
     keys: "signature message sign replay timestamp eip191",
     body: (
       <>
-        <p>Both actions are plain personal-sign messages. Every field is inside the text, so none can be swapped after signing.</p>
+        <p>Wallet actions are plain personal-sign messages. Every field is inside the text, so none can be swapped after signing.</p>
         <Code lang="rig">{`ultravein rig
 address: 0xyouraddress
 name: nightshift
 tier: h100
 asset: 0x0000000000000000000000000000000000000000
 ts: 1791395618`}</Code>
-        <Code lang="session">{`ultravein session
+        <Code lang="link">{`ultravein link
 address: 0xyouraddress
+code: UV-8K2F-QX7M-41PD
 ts: 1791395619`}</Code>
+        <p>The terminal signs its own messages with the node key (Ed25519, base64url): <code>ultravein node</code> for init and <code>ultravein beat</code> for each heartbeat, each with <code>node:</code> and <code>ts:</code> lines.</p>
         <Note kind="rule">ts must be within {MAX_SKEW_SECONDS / 60} minutes of the server clock and newer than the last accepted ts for your wallet. A replayed or stale signature is refused. Contract wallets are checked with ERC-1271.</Note>
       </>
     ),
@@ -426,7 +437,7 @@ ts: 1791395619`}</Code>
       <dl className="mgloss">
         {[
           ["Rig", "Your miner; one per wallet."],
-          ["Shift", `A ${SESSION_H}-hour mining session.`],
+          ["Node", "The terminal key that switches a rig on; holds no funds."],
           ["VGA", "The hashrate tier your rig runs, held or bought."],
           ["Epoch", `A ${EPOCH_SECONDS / 60}-minute window; rewards are measured per epoch.`],
           ["Weight", "Hashrate × seconds on shift within an epoch."],

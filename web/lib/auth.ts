@@ -1,6 +1,6 @@
 export type SignedAction =
   | { action: "rig"; address: string; name: string; tier: string; asset: string; ts: number }
-  | { action: "session"; address: string; ts: number };
+  | { action: "link"; address: string; code: string; ts: number };
 
 export const MAX_SKEW_SECONDS = 300;
 
@@ -8,6 +8,7 @@ export const MAX_SKEW_SECONDS = 300;
 export function messageFor(a: SignedAction): string {
   const lines = [`ultravein ${a.action}`, `address: ${a.address.toLowerCase()}`];
   if (a.action === "rig") lines.push(`name: ${a.name}`, `tier: ${a.tier}`, `asset: ${a.asset}`);
+  if (a.action === "link") lines.push(`code: ${a.code}`);
   lines.push(`ts: ${a.ts}`);
   return lines.join("\n");
 }

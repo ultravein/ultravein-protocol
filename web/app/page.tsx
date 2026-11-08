@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { zeroAddress } from "viem";
-import { EPOCH_SECONDS, POOL_ADDRESS, SESSION_SECONDS, TIERS, TOKEN_ADDRESS, TOKEN_SYMBOL, appLink } from "@/lib/config";
+import { EPOCH_SECONDS, POOL_ADDRESS, TIERS, TOKEN_ADDRESS, TOKEN_SYMBOL, appLink } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { ChipIcon, MachineFigure, RigFigure, SilverDefs, TanksFigure } from "./iso";
 
@@ -44,7 +44,7 @@ const LOG: { t: string; cls?: string; d: number }[] = [
 
 const SHIFT = [
   { at: 0, h: "Deploy", p: "Name your rig, pick a VGA and the vein it mines. One signature." },
-  { at: 0.08, h: "Power on", p: "One more signature runs it on the vein for 12 hours. No gas." },
+  { at: 0.08, h: "Power on", p: "Run node rig.mjs start in a terminal. It mines for as long as that stays open." },
   { at: 0.5, h: "Hourly yield", p: "Every hour it stays powered, it draws a cut of that pool." },
   { at: 1, h: "Cash out", p: "Claim the yield when you want, then power it on again." },
 ];
@@ -52,17 +52,18 @@ const SHIFT = [
 const RULES = [
   { h: "Owner-signed", p: "Your wallet signs each action exactly once. A replayed signature is turned away." },
   { h: "Lowest balance", p: "A held VGA counts only the lowest balance of the hour. A bought VGA skips this check." },
-  { h: "On a session", p: "A VGA mines for 12 hours, then stops. Left idle, it stops drawing from the pool." },
+  { h: "Terminal on", p: "A VGA mines only while its terminal runs. Close it and the rig stops within 10 minutes." },
   { h: "No split bonus", p: "A bigger VGA never pays less per token, so spreading one bag across wallets never earns more." },
   { h: "Rate-limited", p: "No payout can take more than 5% of a pool per day, and each one can be vetoed for 30 minutes." },
 ];
 
 const FAQ = [
-  ["What does my VGA actually do?", "It holds your spot on a vein. For each hour of its 12-hour session that it stays powered, it collects a share of the asset you chose."],
+  ["What does my VGA actually do?", "It holds your spot on a vein. For every hour its terminal stays on, it collects a share of the asset you chose."],
   ["Do I need real hardware?", "No. Every VGA is virtual and runs on the network. Hold enough to deploy one free, or buy one from us."],
   ["What does buying a VGA get me?", `That card for good, paid once in ${TOKEN_SYMBOL}. It mines without holding, an upgrade costs only the difference, and the whole price goes into the ${TOKEN_SYMBOL} reward pool.`],
-  ["What costs gas?", "Claiming, and buying a VGA. Deploying one and starting sessions are signatures."],
-  ["What happens if I sell during a session?", "A held VGA steps down to the card your lowest balance in that hour covers. A bought VGA keeps running."],
+  ["What costs gas?", "Claiming, and buying a VGA. Deploying one and linking its terminal are signatures."],
+  ["Why a terminal?", "It is the machine switch. node rig.mjs start signs a heartbeat every 5 minutes with a key that holds no funds; stop it and your VGA stops. One wallet, one rig: extra terminals add nothing."],
+  ["What happens if I sell while it runs?", "A held VGA steps down to the card your lowest balance in that hour covers. A bought VGA keeps running."],
   ["Can the team drain a pool?", "Only funds nobody has earned, through a public on-chain withdrawal that waits 48 hours."],
   ["My ETH claim disappeared. Why?", "Some wallets carry an EIP-7702 sweeper delegation that forwards any ETH they receive. Check yours before you claim."],
 ];
@@ -107,7 +108,7 @@ export default function Home() {
           <p className="eyebrow"><span className="live">On the vein now · {agents.length}</span> VGAs mining on Robinhood Chain</p>
           <h1 className="deck-hero__title">Your VGA,<br /> <span className="u-sheen">on the vein.</span></h1>
           <p className="deck-hero__sub">
-            Deploy a VGA free with what you hold, or buy one from us and keep it for good. Every 12-hour session, it mines ETH, {TOKEN_SYMBOL} or a tokenized stock out of the pool for you, hour after hour.
+            Deploy a VGA free with what you hold, or buy one from us and keep it for good. Link it to a terminal, run one command, and it mines ETH, {TOKEN_SYMBOL} or a tokenized stock out of the pool for every hour it stays on.
           </p>
           <div className="deck-hero__ctas">
             <a className="btn btn--lg" href={appLink("#create")}>Deploy your VGA <span aria-hidden="true">→</span></a>
@@ -139,11 +140,11 @@ export default function Home() {
         </dl>
       </section>
 
-      {/* 01 the session: one 12-hour bar ---------------------------------------- */}
+      {/* 01 terminal to payout: one hour-by-hour bar ---------------------------------------- */}
       <section className="block">
-        <Bar n="01" label="The 12-hour dig" right="paid hourly" />
+        <Bar n="01" label="Terminal to payout" right="paid hourly" />
         <div className="block__body">
-        <h2 className="block__title">Twelve hours on the vein. Paid out by the hour.</h2>
+        <h2 className="block__title">One command switches it on. Every hour pays.</h2>
         <div className="shift">
           <div className="shift__track" aria-hidden="true">
             {Array.from({ length: 13 }, (_, i) => <span key={i} className="shift__tick" style={{ left: `${(i / 12) * 100}%` }}><em>{i}h</em></span>)}
@@ -280,7 +281,7 @@ export default function Home() {
             ["Payout per hour", "0.1% of each pool"],
             ["Payout cap", "5% of a pool per day"],
             ["Veto window", "30 minutes per payout root"],
-            ["Session length", `${SESSION_SECONDS / 3600} hours, then restart`],
+            ["Heartbeat", "every 5 min from the terminal; a rig stops 10 min after the last one"],
             ["VGA shop", `bought once in ${TOKEN_SYMBOL}, kept for good, price paid into the pool`],
             ["Withdraw", "unowed funds only · public · 48h lock"],
             ["Claim", "your own rewards, any time"],

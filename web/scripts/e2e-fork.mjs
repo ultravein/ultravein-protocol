@@ -1,9 +1,11 @@
 // End-to-end check against a local anvil fork of Robinhood Chain.
 // Needs: anvil on :8545 (chain id 4663), MockToken + MiningPool deployed, `next dev` on :3000
-// started with that pool/token, PUBLISHER_KEY = anvil key 1 and CRON_SECRET=dev.
+// started with that pool/token, PUBLISHER_KEY = anvil key 1, CRON_SECRET=dev and
+// RIG_BEAT_WINDOW=86400 (chain time jumps by hours, so one heartbeat must outlast the jump).
 // Usage: node scripts/e2e-fork.mjs <pool> <token>
 import { createPublicClient, createTestClient, createWalletClient, http, parseAbi, parseEther, zeroAddress } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { linkAndBeat } from "./rig-node.mjs";
 
 const [pool, token] = process.argv.slice(2);
 const API = process.env.E2E_API ?? "http://localhost:3000";
@@ -46,9 +48,9 @@ let r = await post("/api/agent", { ...agentBody, signature: await miner.signMess
 ok(r.status === 200, `agent created (${JSON.stringify(r.body)})`);
 r = await post("/api/agent", { ...agentBody, signature: await miner.signMessage({ message: agentMsg }) });
 ok(r.status === 401, "replayed signature rejected");
-ts += 1;
-r = await post("/api/session", { address: addr, ts, signature: await miner.signMessage({ message: msg(["ultravein session", `address: ${addr}`, `ts: ${ts}`]) }) });
-ok(r.status === 200, `session started (${JSON.stringify(r.body)})`);
+const rig = await linkAndBeat(post, miner, addr);
+ok(rig.link.status === 200, `terminal linked (${rig.code})`);
+ok(rig.beat.status === 200 && rig.beat.body.powered, `heartbeat powers the rig (${JSON.stringify(rig.beat.body)})`);
 
 // 3. two hours pass on chain; the hourly job allocates and publishes
 await test.increaseTime({ seconds: 7200 });
