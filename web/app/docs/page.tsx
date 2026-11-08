@@ -80,13 +80,13 @@ const tierRows = TIERS.map((t, i) => [
 const CHAPTERS: Chapter[] = [
   {
     id: "overview",
-    title: "Overview",
-    summary: "What Ultravein is, in one page.",
+    title: "The short version",
+    summary: "Ultravein on one page.",
     keys: "intro what agent mining pool robinhood",
     body: (
       <>
-        <p className="mlead">Ultravein lets every holder <b>mine with an agent</b>. You deploy an agent, send it on a {SESSION_H}-hour shift, and every hour it holds your place it earns a share of the pool you picked: ETH, {TOKEN_SYMBOL}, or a tokenized stock.</p>
-        <p>There is no hardware. Your agent runs on a <b>machine</b>, which is a setting you choose in the app. Bigger machines mine faster and need more held {TOKEN_SYMBOL} to switch on.</p>
+        <p className="mlead">Ultravein gives every holder <b>an agent that works the vein</b>. Assign it, clock it in for {SESSION_H} hours, and for every hour it holds your spot it draws a share of the pool you chose: ETH, {TOKEN_SYMBOL}, or a tokenized stock.</p>
+        <p>No hardware involved. Your agent digs with a <b>rig</b> (the app calls it a machine), which is only a setting. Heavier rigs pull faster and need more held {TOKEN_SYMBOL} to power on.</p>
         <Table
           head={["Part", "What it is"]}
           rows={[
@@ -104,8 +104,8 @@ const CHAPTERS: Chapter[] = [
   },
   {
     id: "quickstart",
-    title: "Quickstart",
-    summary: "From a wallet to a claim in five steps.",
+    title: "First dig",
+    summary: "From wallet to payout in five moves.",
     keys: "start begin how setup first steps",
     body: (
       <>
@@ -122,8 +122,8 @@ const CHAPTERS: Chapter[] = [
   },
   {
     id: "agents",
-    title: "Agents & characters",
-    summary: "One wallet, one agent. Characters are cosmetic.",
+    title: "Agents & looks",
+    summary: "One agent per wallet. Looks are cosmetic.",
     keys: "agent character scout rigger sentinel name avatar",
     body: (
       <>
@@ -148,8 +148,8 @@ const CHAPTERS: Chapter[] = [
   },
   {
     id: "shifts",
-    title: "Shifts",
-    summary: `${SESSION_H} hours on, then a restart.`,
+    title: "Digs (shifts)",
+    summary: `${SESSION_H} hours on the vein, then clock in again.`,
     keys: "shift session start restart 12h idle",
     body: (
       <>
@@ -165,8 +165,8 @@ const CHAPTERS: Chapter[] = [
   },
   {
     id: "machines",
-    title: "Machines",
-    summary: "The speed setting, unlocked by holding.",
+    title: "Rigs (machines)",
+    summary: "Your rate, unlocked by what you hold.",
     keys: "machine gpu tier hashrate rtx a100 h100 hold",
     body: (
       <>
@@ -181,8 +181,8 @@ runs as     RTX 4090 · 10 H/s for that hour`}</Code>
   },
   {
     id: "holding",
-    title: "The holding check",
-    summary: "The lowest balance in the hour is what counts.",
+    title: "The stake check",
+    summary: "Your lowest balance in the hour sets the rate.",
     keys: "balance hold minimum dip transfer logs flash",
     body: (
       <>
@@ -198,8 +198,8 @@ runs as     RTX 4090 · 10 H/s for that hour`}</Code>
   },
   {
     id: "rewards",
-    title: "Pools & rewards",
-    summary: `Each pool releases ${PCT_PER_HOUR}% of itself per hour.`,
+    title: "Veins & yield",
+    summary: `Each pool lets out ${PCT_PER_HOUR}% of itself per hour.`,
     keys: "reward emission formula share pool eth stock nvda aapl msft",
     body: (
       <>
@@ -221,8 +221,8 @@ B earns 0.01 ×  99,000 / 531,000 = 0.001864 ETH`}</Code>
   },
   {
     id: "settlement",
-    title: "Settlement",
-    summary: "Hourly roots, a veto window and a hard cap.",
+    title: "Hourly settlement",
+    summary: "A root each hour, a veto window, a hard cap.",
     keys: "settlement merkle root veto guardian publisher cap epoch",
     body: (
       <>
@@ -244,8 +244,8 @@ B earns 0.01 ×  99,000 / 531,000 = 0.001864 ETH`}</Code>
   },
   {
     id: "claiming",
-    title: "Claiming",
-    summary: "Your rewards, any time, in one transaction.",
+    title: "Cashing out",
+    summary: "Your yield, whenever you want, in one transaction.",
     keys: "claim proof gas wallet blocked paused 7702 sweeper",
     body: (
       <>
@@ -261,8 +261,8 @@ B earns 0.01 ×  99,000 / 531,000 = 0.001864 ETH`}</Code>
   },
   {
     id: "safety",
-    title: "Safety & trust",
-    summary: "What the contract enforces, and what it does not.",
+    title: "Guarantees",
+    summary: "What the contract guarantees, and what it cannot.",
     keys: "safety trust withdraw timelock owner upgrade proxy rug",
     body: (
       <>
@@ -283,7 +283,7 @@ B earns 0.01 ×  99,000 / 531,000 = 0.001864 ETH`}</Code>
   {
     id: "contract",
     title: "Contract reference",
-    summary: "MiningPool: functions, events, errors.",
+    summary: "MiningPool's functions, events and errors.",
     keys: "contract solidity function event error abi miningpool address",
     body: (
       <>
@@ -322,7 +322,7 @@ error OverCap(asset)  BadProof  NothingToClaim  OverCommitted  PendingExists
   {
     id: "api",
     title: "API reference",
-    summary: "Every public endpoint and its shape.",
+    summary: "Each public endpoint and what it returns.",
     keys: "api endpoint json rest stats me proof history network agent session",
     body: (
       <>
@@ -350,7 +350,7 @@ error OverCap(asset)  BadProof  NothingToClaim  OverCommitted  PendingExists
   {
     id: "messages",
     title: "Signed messages",
-    summary: "The exact text your wallet signs.",
+    summary: "Word for word, what your wallet signs.",
     keys: "signature message sign replay timestamp eip191",
     body: (
       <>
@@ -372,7 +372,7 @@ ts: 1791395619`}</Code>
   {
     id: "dashboard",
     title: "Dashboard guide",
-    summary: "What every tab is for.",
+    summary: "A tour of every tab.",
     keys: "dashboard app overview portfolio activity leaderboard tab",
     body: (
       <Table
@@ -392,7 +392,7 @@ ts: 1791395619`}</Code>
   {
     id: "faq",
     title: "FAQ",
-    summary: "Short answers.",
+    summary: "Quick answers.",
     keys: "faq question answer",
     body: (
       <div className="mfaq">
@@ -412,7 +412,7 @@ ts: 1791395619`}</Code>
   {
     id: "glossary",
     title: "Glossary",
-    summary: "Words the site and the API use.",
+    summary: "The vocabulary of the site and the API.",
     keys: "glossary terms definition words",
     body: (
       <dl className="mgloss">
@@ -462,9 +462,9 @@ export default function Docs() {
   return (
     <div className="manual">
       <header className="manual__cover">
-        <span className="manual__stamp">OPERATOR MANUAL · {REV}</span>
-        <h1>Ultravein, explained end to end.</h1>
-        <p>How agents mine, how machines and holding work, how every hour is settled, and the exact contract, API and messages behind it.</p>
+        <span className="manual__stamp">FIELD MANUAL · {REV}</span>
+        <h1>Inside Ultravein, from rig to payout.</h1>
+        <p>How an agent taps a vein, how rigs and holdings set its rate, how each hour is settled, and the exact contract, API and signed messages underneath.</p>
         <label className="manual__search">
           <span aria-hidden="true">/</span>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter chapters: claim, machine, api…" aria-label="Filter chapters" />

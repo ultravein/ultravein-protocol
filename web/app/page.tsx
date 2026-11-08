@@ -31,39 +31,39 @@ function Tag({ kind = "open", children }: { kind?: "open" | "planned" | "none"; 
 
 // agent.log lines typed into the hero console; `d` is when each appears (ms)
 const LOG: { t: string; cls?: string; d: number }[] = [
-  { t: "agent nightshift online", cls: "ok", d: 300 },
-  { t: "machine  H100 · 120 H/s", cls: "dim", d: 900 },
-  { t: "reward   NVDA", cls: "dim", d: 1300 },
-  { t: "shift    12h started", d: 1900 },
-  { t: "epoch    holding verified", cls: "dim", d: 2700 },
-  { t: "earned   +0.0041 NVDA", cls: "ok", d: 3300 },
-  { t: "epoch    holding verified", cls: "dim", d: 4300 },
-  { t: "earned   +0.0039 NVDA", cls: "ok", d: 4900 },
-  { t: "claim    ready", d: 5800 },
+  { t: "agent vesper clocked in", cls: "ok", d: 300 },
+  { t: "rig      H100 · 120 H/s", cls: "dim", d: 900 },
+  { t: "vein     NVDA", cls: "dim", d: 1300 },
+  { t: "dig      12h opened", d: 1900 },
+  { t: "check    stake held", cls: "dim", d: 2700 },
+  { t: "yield    +0.0041 NVDA", cls: "ok", d: 3300 },
+  { t: "check    stake held", cls: "dim", d: 4300 },
+  { t: "yield    +0.0039 NVDA", cls: "ok", d: 4900 },
+  { t: "cashout  ready", d: 5800 },
 ];
 
 const SHIFT = [
-  { at: 0, h: "Deploy", p: "Name your agent and pick what it mines. One signature." },
-  { at: 0.08, h: "Shift starts", p: "Sign once more and it works a 12-hour shift. No gas." },
-  { at: 0.5, h: "Paid every hour", p: "Each hour it holds your bag, it earns a share of its pool." },
-  { at: 1, h: "Bring it home", p: "Claim what it earned whenever you like, then send it out again." },
+  { at: 0, h: "Assign", p: "Name your agent and choose the vein it taps. One signature." },
+  { at: 0.08, h: "Clock in", p: "One more signature puts it on the vein for 12 hours. No gas." },
+  { at: 0.5, h: "Hourly yield", p: "Every hour your stake stays put, it draws a cut of that pool." },
+  { at: 1, h: "Cash out", p: "Claim the yield when you want, then clock it back in." },
 ];
 
 const RULES = [
-  { h: "Signed", p: "Every move your agent makes is signed by your wallet, once. Replays are refused." },
-  { h: "Held", p: "The lowest balance you held in the hour is what counts. A dip mid-hour is the dip." },
-  { h: "On shift", p: "Agents work 12 hours, then stop. An abandoned agent stops earning." },
-  { h: "Fair split", p: "Bigger machines never pay less per token, so splitting a bag never earns more." },
-  { h: "Capped", p: "No payout can take more than 5% of a pool a day, and any can be vetoed for 30 minutes." },
+  { h: "Owner-signed", p: "Your wallet signs each action exactly once. A replayed signature is turned away." },
+  { h: "Lowest balance", p: "Only the lowest balance you held during the hour counts. Dip for a minute and the whole hour sees it." },
+  { h: "Clocked in", p: "An agent digs for 12 hours, then stops. Left idle, it stops drawing from the pool." },
+  { h: "No split bonus", p: "A heavier rig never pays less per token, so spreading one bag across wallets never earns more." },
+  { h: "Rate-limited", p: "No payout can take more than 5% of a pool per day, and each one can be vetoed for 30 minutes." },
 ];
 
 const FAQ = [
-  ["What does my agent actually do?", "It holds your place in a mining pool. For every hour of its shift your bag stays put, it earns a share of the asset you picked."],
-  ["Do I need a GPU?", "No. The machine is a choice inside the app. Your held tokens decide which machines you can pick."],
-  ["Does it cost gas?", "Deploying and starting shifts are signatures. Only claiming is a transaction."],
-  ["What if I sell mid-shift?", "Your agent drops to the machine your lowest balance in that hour covers. Below the smallest machine, that hour earns nothing."],
-  ["Can the team take the pool?", "Only what is not owed to miners, through a withdraw that is public on chain and waits 48 hours."],
-  ["Why did my ETH claim vanish?", "Some wallets carry an EIP-7702 sweeper delegation that forwards any ETH they receive. Check your wallet before claiming."],
+  ["What is my agent really doing?", "Holding your spot on a vein. For each hour of its 12-hour dig that your stake stays in place, it collects a share of the asset you chose."],
+  ["Do I need my own hardware?", "No. The rig is a setting in the app. How much you hold decides which rigs you can power."],
+  ["What costs gas?", "Only claiming. Assigning an agent and clocking it in are signatures."],
+  ["What happens if I sell during a dig?", "Your agent steps down to the rig your lowest balance in that hour can power. Below the smallest rig, that hour pays nothing."],
+  ["Can the team drain a pool?", "Only funds nobody has earned, through a public on-chain withdrawal that waits 48 hours."],
+  ["My ETH claim disappeared. Why?", "Some wallets carry an EIP-7702 sweeper delegation that forwards any ETH they receive. Check yours before you claim."],
 ];
 
 export default function Home() {
@@ -103,14 +103,14 @@ export default function Home() {
       {/* hero: copy on the left, the rig on a framed stage on the right, gauges as one strip */}
       <section className="deck-hero">
         <div className="deck-hero__copy">
-          <p className="eyebrow"><span className="live">On shift now · {agents.length}</span> agents mining on Robinhood Chain</p>
-          <h1 className="deck-hero__title">Mine with <span className="u-sheen">your agent.</span></h1>
+          <p className="eyebrow"><span className="live">On the vein now · {agents.length}</span> agents digging on Robinhood Chain</p>
+          <h1 className="deck-hero__title">Your agent, <span className="u-sheen">on the vein.</span></h1>
           <p className="deck-hero__sub">
-            Deploy an agent, send it on a 12-hour shift, and it mines ETH, {TOKEN_SYMBOL} or a tokenized stock for you every hour. You pick the machine it runs on. Your held tokens power it.
+            Put an agent on the vein for 12 hours and it pulls ETH, {TOKEN_SYMBOL} or a tokenized stock out of the pool for you, hour after hour. You choose the rig it digs with. What you hold powers it.
           </p>
           <div className="deck-hero__ctas">
-            <a className="btn btn--lg" href={appLink("#create")}>Deploy your agent <span aria-hidden="true">→</span></a>
-            <a className="btn ghost btn--lg" href="#board">See who&apos;s on shift</a>
+            <a className="btn btn--lg" href={appLink("#create")}>Put your agent to work <span aria-hidden="true">→</span></a>
+            <a className="btn ghost btn--lg" href="#board">See who&apos;s digging</a>
           </div>
         </div>
 
@@ -131,7 +131,7 @@ export default function Home() {
           </div>
         </div>
         <dl className="deck__gauges">
-            <div><dt>Agents on shift</dt><dd>{agents.length}<small> / {stats?.deployed ?? 0}</small></dd><i style={{ ["--v" as string]: Math.min(1, agents.length / 50) }} /></div>
+            <div><dt>Agents digging</dt><dd>{agents.length}<small> / {stats?.deployed ?? 0}</small></dd><i style={{ ["--v" as string]: Math.min(1, agents.length / 50) }} /></div>
             <div><dt>Network hashrate</dt><dd>{totalHash.toString()}<small> H/s</small></dd><i style={{ ["--v" as string]: Math.min(1, Number(totalHash) / 2000) }} /></div>
             <div><dt>ETH in the pool</dt><dd>{fmt(eth?.balance ?? "0")}<small> ETH</small></dd><i style={{ ["--v" as string]: 1 }} /></div>
             <div><dt>Next payout in</dt><dd>{now ? hms(epochLeft) : "--:--:--"}</dd><i style={{ ["--v" as string]: now ? 1 - epochLeft / EPOCH_SECONDS : 0 }} /></div>
@@ -140,9 +140,9 @@ export default function Home() {
 
       {/* 01 agent on shift: one 12-hour bar ---------------------------------------- */}
       <section className="block">
-        <Bar n="01" label="Your agent, on shift" right="12h per shift" />
+        <Bar n="01" label="The 12-hour dig" right="paid hourly" />
         <div className="block__body">
-        <h2 className="block__title">Send it out. It works the shift. You bring home the haul.</h2>
+        <h2 className="block__title">Twelve hours on the vein. Paid out by the hour.</h2>
         <div className="shift">
           <div className="shift__track" aria-hidden="true">
             {Array.from({ length: 13 }, (_, i) => <span key={i} className="shift__tick" style={{ left: `${(i / 12) * 100}%` }}><em>{i}h</em></span>)}
@@ -164,11 +164,11 @@ export default function Home() {
 
       {/* 02 machines: an option, not the story -------------------------------------- */}
       <section className="block">
-        <Bar n="02" label="Pick its machine" />
+        <Bar n="02" label="Choose the rig" />
         <div className="block__body block__body--split">
         <div>
-          <h2 className="block__title">Every agent runs on a machine.</h2>
-          <p className="block__lead">The machine is just a setting. A bigger one mines faster, and needs more held {TOKEN_SYMBOL} to switch on. If your balance dips, your agent drops to the machine it still covers.</p>
+          <h2 className="block__title">Pick the rig it digs with.</h2>
+          <p className="block__lead">The rig is a setting, not the story. A heavier rig pulls more per hour and needs more held {TOKEN_SYMBOL} to power on. When your balance drops, your agent steps down to the rig it can still power.</p>
         </div>
         <div className="machines">
           {TIERS.map((t, i) => (
@@ -185,9 +185,9 @@ export default function Home() {
 
       {/* 03 the sorter: figure on the left, the five checks stacked beside it ---------- */}
       <section className="block" id="safeguards">
-        <Bar n="03" label="The sorter" right={<span><i className="key key--ball" /> agent <i className="key key--wire" /> bot</span>} />
+        <Bar n="03" label="The filter" right={<span><i className="key key--ball" /> agent <i className="key key--wire" /> bot</span>} />
         <div className="block__body">
-        <h2 className="block__title">Every hour, every agent goes through the sorter.</h2>
+        <h2 className="block__title">Each hour, every agent passes the filter.</h2>
         <div className="sorter">
           <MachineFigure />
           <ol className="sorter__rules">
@@ -201,9 +201,9 @@ export default function Home() {
 
       {/* 04 the haul: tanks across the top, one cell per pool beneath ----------------- */}
       <section className="block" id="pools">
-        <Bar n="04" label="What it brings home" right={<span className="live">live</span>} />
+        <Bar n="04" label="The yield" right={<span className="live">live</span>} />
         <div className="block__body">
-        <h2 className="block__title">Five pools. Your agent mines the one you pick.</h2>
+        <h2 className="block__title">Five veins. Your agent taps the one you choose.</h2>
         <div className="bento">
           <div className="bento__tanks">
             <span className="bento__cap">pool levels</span>
@@ -218,7 +218,7 @@ export default function Home() {
             </div>
           ))}
           <div className="bento__note">
-            <p>Each pool releases <b>0.1% of itself every hour</b>, split between the agents mining it by machine × minutes on shift. Rewards are paid in the asset itself. No swap.</p>
+            <p>Every hour each pool lets out <b>0.1% of its balance</b>, divided among the agents tapping it by rig size × minutes worked. You are paid in that asset, never swapped.</p>
             <p className="warn">Tokenized stocks are not available to US persons.</p>
           </div>
         </div>
@@ -227,17 +227,17 @@ export default function Home() {
 
       {/* 05 board -------------------------------------------------------------------- */}
       <section className="block" id="board">
-        <Bar n="05" label="On shift now" right={`${agents.length} of ${stats?.deployed ?? 0}`} />
+        <Bar n="05" label="Digging now" right={`${agents.length} of ${stats?.deployed ?? 0}`} />
         <div className="block__body">
         <div className="block__row">
-          <h2 className="block__title">Agents on the board.</h2>
+          <h2 className="block__title">Who&apos;s on the vein.</h2>
           <a className="btn ghost" href={appLink("#leaderboard")}>Full leaderboard <span aria-hidden="true">→</span></a>
         </div>
         {agents.length === 0 ? (
           <div className="empty-board">
-            <h3>No agent is on shift yet.</h3>
-            <p>Deploy yours and it takes the first card on the board.</p>
-            <a className="btn" href={appLink("#create")}>Deploy an agent</a>
+            <h3>The vein is quiet for now.</h3>
+            <p>Put your agent to work and it claims the first spot.</p>
+            <a className="btn" href={appLink("#create")}>Put an agent to work</a>
           </div>
         ) : (
           <div className="board">
@@ -246,14 +246,14 @@ export default function Home() {
                 <div className="rig__top">
                   <AgentAvatar kind={a.avatar ?? "scout"} size={48} still />
                   <div className="rig__id"><b>{a.name}</b><span>{short(a.address)}</span></div>
-                  <span className="live">on shift</span>
+                  <span className="live">digging</span>
                 </div>
                 <div className="rig__stats">
                   <div><span className="label">Machine</span><b>{tierName(a.tier)}</b></div>
                   <div><span className="label">Rate</span><b>{a.hashrate} H/s</b></div>
                   <div><span className="label">Mines</span><b>{symbolOf(a.asset)}</b></div>
                 </div>
-                <div className="rig__foot">Shift ends in {now ? hms(Math.max(0, a.end - now)) : "…"}</div>
+                <div className="rig__foot">Dig ends in {now ? hms(Math.max(0, a.end - now)) : "…"}</div>
               </div>
             ))}
           </div>
@@ -263,11 +263,11 @@ export default function Home() {
 
       {/* 06 spec sheet: contracts + hard limits -------------------------------------- */}
       <section className="block">
-        <Bar n="06" label="Spec sheet" />
+        <Bar n="06" label="Contract terms" />
         <div className="block__body block__body--split">
         <div>
-          <h2 className="block__title">What the contract enforces.</h2>
-          <p className="block__lead">One contract holds every pool. No proxy, no upgrade path. If anything here and the contract disagree, the contract is right.</p>
+          <h2 className="block__title">Rules the contract holds.</h2>
+          <p className="block__lead">A single contract holds every pool, with no proxy and no upgrade path. Where this page and the contract differ, the contract wins.</p>
         </div>
         <div className="spec">
           {[
@@ -276,7 +276,7 @@ export default function Home() {
             ["Payout per hour", "0.1% of each pool"],
             ["Payout cap", "5% of a pool per day"],
             ["Veto window", "30 minutes per payout root"],
-            ["Shift length", `${SESSION_SECONDS / 3600} hours, then restart`],
+            ["Dig length", `${SESSION_SECONDS / 3600} hours, then restart`],
             ["Withdraw", "unowed funds only · public · 48h lock"],
             ["Claim", "your own rewards, any time"],
           ].map(([k, v]) => (
@@ -292,10 +292,10 @@ export default function Home() {
         <div className="block__body">
           <ol className="road">
             {[
-              ["done", "Contract, hourly job and app", "Tested end to end on a fork of the chain."],
-              ["next", "Token launch", "Its address is published here."],
-              ["next", "Mainnet pools", "MiningPool deploys; the first pools are funded."],
-              ["later", "Builders API", "Agents, shifts and proofs, public."],
+              ["done", "Contract, hourly settlement and app", "Run end to end against a fork of the chain."],
+              ["next", "Token goes live", "Its address lands on this page."],
+              ["next", "Veins open on mainnet", "MiningPool deploys and the first pools get funded."],
+              ["later", "Open builder API", "Agents, digs and proofs, readable by anyone."],
             ].map(([s, h, p]) => (
               <li key={h} className={`road--${s}`}>
                 <span className="road__dot" aria-hidden="true" />
@@ -325,8 +325,8 @@ export default function Home() {
       <section className="final">
         <span className="final__frame" aria-hidden="true" />
         <span className="final__n" aria-hidden="true">09</span>
-        <h2>Your agent is waiting for its first shift.</h2>
-        <a className="btn btn--lg" href={appLink("#create")}>Deploy your agent <span aria-hidden="true">→</span></a>
+        <h2>The vein is open. Your agent isn&apos;t on it yet.</h2>
+        <a className="btn btn--lg" href={appLink("#create")}>Put your agent to work <span aria-hidden="true">→</span></a>
       </section>
 
       <footer className="foot">

@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { SITE_URL, appLink, siteLink } from "@/lib/config";
 import { ConnectButton, WalletProvider } from "./wallet";
 
-const TITLE = "Ultravein · Mine with your agent";
-const DESCRIPTION = "Deploy an agent, send it on a 12-hour shift, and it mines ETH, the token or tokenized stocks for you on Robinhood Chain.";
+const TITLE = "Ultravein · Your agent, on the vein";
+const DESCRIPTION = "Put an agent on the vein for 12 hours and it pulls ETH, the token or tokenized stocks from the pool for you on Robinhood Chain.";
 
 // Link previews need absolute image URLs: the configured site, else Vercel's production domain.
 const base = SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");

@@ -323,7 +323,7 @@ export function Machine({ d }: { d: Dash }) {
           </Panel>
         </div>
       </div>
-      <Panel title="How every agent is checked" aside={<span className="label">FIG. 2 · THE SORTER</span>}>
+      <Panel title="The hourly filter" aside={<span className="label">FIG. 2 · THE FILTER</span>}>
         <MachineFigure />
       </Panel>
     </>
@@ -371,8 +371,8 @@ export function Activity({ d }: { d: Dash }) {
     <>
       <Head kicker="04" title="Activity" />
       <ConnectHint d={d} />
-      <Panel title="Minutes mined per hour" aside={<span className="label">last 48 epochs</span>}>
-        <Chart data={minutes} unit="min" title="Minutes mined per hour" empty="No mining yet. Each hour your session runs shows up here." />
+      <Panel title="Minutes on the vein per hour" aside={<span className="label">last 48 epochs</span>}>
+        <Chart data={minutes} unit="min" title="Minutes on the vein per hour" empty="Nothing dug yet. Every hour your agent spends on the vein shows up here." />
       </Panel>
       <div className="dgrid dgrid--1-1">
         <Panel title="Timeline" aside={<Segmented value={filter} onChange={setFilter} label="Filter activity" options={[{ id: "all", label: "All" }, { id: "earn", label: "Earnings" }, { id: "agent", label: "Agent" }]} />}>
