@@ -4,11 +4,12 @@
 import { useEffect, useState } from "react";
 
 type V = [number, number, number];
-// Asymmetric 3/4 camera (dimetric): x runs 20deg below horizontal, y runs 40deg the other way and
-// slightly foreshortened, so the front faces read wider than the sides. Every plane matrix below
-// is built from these two axes, so changing them re-angles every figure at once.
-const AX: [number, number] = [0.94, 0.342];
-const AY: [number, number] = [-0.651, 0.546];
+// Asymmetric 3/4 camera (dimetric) seen from the opposite side: x runs 20deg below horizontal to
+// the LEFT, y runs 40deg down to the right and slightly foreshortened, so figures face down-left
+// and the front faces read wider than the sides. Every plane matrix below is built from these two
+// axes, so changing them re-angles every figure at once.
+const AX: [number, number] = [-0.94, 0.342];
+const AY: [number, number] = [0.651, 0.546];
 const xy = ([x, y, z]: V): [number, number] => [+(x * AX[0] + y * AY[0]).toFixed(2), +(x * AX[1] + y * AY[1] - z).toFixed(2)];
 const TOP_M = `${AX[0]} ${AX[1]} ${AY[0]} ${AY[1]}`; // flat drawing laid on a top plane
 const FRONT_M = `${AX[0]} ${AX[1]} 0 -1`; // plane y = const
@@ -32,17 +33,18 @@ export function SilverDefs() {
   return (
     <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
       <defs>
+        {/* line-drawing style: near-flat paper faces, the ink edges carry the form */}
         <linearGradient id="g-top" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#ffffff" />
-          <stop offset="1" stopColor="#ddd3f6" />
+          <stop offset="1" stopColor="#fbfaff" />
         </linearGradient>
         <linearGradient id="g-left" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#c9b8f2" />
-          <stop offset="1" stopColor="#9b80e0" />
+          <stop offset="0" stopColor="#f7f4fe" />
+          <stop offset="1" stopColor="#efe9fc" />
         </linearGradient>
         <linearGradient id="g-right" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#8b6fd6" />
-          <stop offset="1" stopColor="#5b3fb0" />
+          <stop offset="0" stopColor="#e6ddfa" />
+          <stop offset="1" stopColor="#d9cdf6" />
         </linearGradient>
         <linearGradient id="g-sheen" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#5b21b6" />
@@ -51,10 +53,9 @@ export function SilverDefs() {
           <stop offset=".8" stopColor="#7c3aed" />
           <stop offset="1" stopColor="#5b21b6" />
         </linearGradient>
-        <linearGradient id="g-liquid" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#7c3aed" />
-          <stop offset=".45" stopColor="#c4b5fd" />
-          <stop offset="1" stopColor="#6d28d9" />
+        <linearGradient id="g-liquid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#a78bfa" />
+          <stop offset="1" stopColor="#7c3aed" />
         </linearGradient>
         <pattern id="g-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <path d="M0 0V4" stroke="#4c1d95" strokeOpacity=".45" />
@@ -64,7 +65,7 @@ export function SilverDefs() {
           <stop offset="1" stopColor="#6d28d9" />
         </radialGradient>
         <radialGradient id="g-glow">
-          <stop offset="0" stopColor="#a78bfa" stopOpacity=".22" />
+          <stop offset="0" stopColor="#a78bfa" stopOpacity=".14" />
           <stop offset="1" stopColor="#a78bfa" stopOpacity="0" />
         </radialGradient>
       </defs>
@@ -79,14 +80,14 @@ function Box({ at: [x, y, z], size: [w, d, h], wire, hatch }: { at: V; size: V; 
   const left: V[] = [[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]];
   if (wire)
     return (
-      <g fill={hatch ? "url(#g-hatch)" : "none"} stroke="#2e1065" strokeOpacity=".75" strokeWidth=".8" strokeDasharray="3 2" strokeLinejoin="round">
+      <g fill={hatch ? "url(#g-hatch)" : "none"} stroke="#141018" strokeOpacity=".75" strokeWidth=".8" strokeDasharray="3 2" strokeLinejoin="round">
         <polygon points={poly(top)} />
         <polygon points={poly(right)} />
         <polygon points={poly(left)} />
       </g>
     );
   return (
-    <g stroke="#2e1065" strokeOpacity=".65" strokeWidth=".8" strokeLinejoin="round">
+    <g stroke="#141018" strokeOpacity=".88" strokeWidth=".7" strokeLinejoin="round">
       <polygon points={poly(left)} fill="url(#g-left)" />
       <polygon points={poly(right)} fill="url(#g-right)" />
       <polygon points={poly(top)} fill="url(#g-top)" />
@@ -109,7 +110,7 @@ export function ChipIcon({ size = 26, dim }: { size?: number; dim?: boolean }) {
           </g>
         ))}
       </g>
-      <rect x="3.5" y="3.5" width="15" height="15" rx="1.5" fill="url(#g-left)" stroke="#2e1065" strokeOpacity=".7" strokeWidth=".8" />
+      <rect x="3.5" y="3.5" width="15" height="15" rx="1.5" fill="url(#g-left)" stroke="#141018" strokeOpacity=".7" strokeWidth=".8" />
       <rect x="7" y="7" width="8" height="8" rx=".8" fill="url(#g-top)" />
     </svg>
   );
@@ -117,20 +118,27 @@ export function ChipIcon({ size = 26, dim }: { size?: number; dim?: boolean }) {
 
 // --- FIG. 1: the rig ----------------------------------------------------------------
 
-/** One fan drawn flat, then laid onto the card's top plane with an isometric matrix. */
+/** One fan as a line drawing laid on the card's top plane: thin blade strokes, a ticked bezel,
+ *  and a violet arc that sweeps the rim (the motion), instead of a solid spinning rotor. */
 function Fan({ c, r, spin }: { c: V; r: number; spin: number | null }) {
   const [X, Y] = xy(c);
-  const blades = Array.from({ length: 9 }, (_, i) => i * 40);
+  const blades = Array.from({ length: 7 }, (_, i) => (i * 360) / 7);
+  const arc = Math.PI * 2 * (r + 2);
   return (
     <g transform={`matrix(${TOP_M} ${X} ${Y})`}>
-      <circle r={r + 3} fill="#1e1534" stroke="url(#g-sheen)" strokeWidth="1.4" />
-      <g>
+      <circle r={r + 4} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".7" />
+      <circle r={r + 4} fill="none" stroke="#141018" strokeOpacity=".5" strokeWidth="2.2" strokeDasharray="0.6 5.2" />
+      <g fill="none" stroke="#141018" strokeOpacity=".7" strokeWidth=".6" strokeLinecap="round">
         {blades.map((a) => (
-          <path key={a} d={`M0 0 Q ${r * 0.55} ${-r * 0.2} ${r * 0.92} ${r * 0.18} L ${r * 0.62} ${r * 0.42} Z`} transform={`rotate(${a})`} fill="url(#g-left)" stroke="#4c1d95" strokeOpacity=".55" strokeWidth=".6" />
+          <path key={a} d={`M${r * 0.26} 0 Q ${r * 0.6} ${-r * 0.32} ${r * 0.9} ${-r * 0.06}`} transform={`rotate(${a})`} />
         ))}
-        {spin && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur={`${spin}s`} repeatCount="indefinite" />}
+        {spin && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur={`${spin * 2.4}s`} repeatCount="indefinite" />}
       </g>
-      <circle r={r * 0.24} fill="url(#g-top)" stroke="#2e1065" strokeOpacity=".7" strokeWidth=".6" />
+      <circle r={r + 2} fill="none" stroke="#7c3aed" strokeWidth="1.6" strokeLinecap="round" strokeDasharray={`${arc * 0.22} ${arc}`}>
+        {spin && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur={`${spin}s`} repeatCount="indefinite" />}
+      </circle>
+      <circle r={r * 0.22} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".7" />
+      <circle r={r * 0.07} fill="#7c3aed" />
     </g>
   );
 }
@@ -148,8 +156,8 @@ export function RigFigure({ agents, idle, label = "ultravein-01" }: { agents: nu
   const ledA = xy([4, D - 4, 25]);
   const ledB = xy([L - 4, D - 4, 25]);
   return (
-    <svg viewBox="-112 -66 364 216" className="fig-svg" role="img" aria-label={`A graphics card with three fans. ${agents} agents mining.`}>
-      <ellipse cx="70" cy="48" rx="200" ry="100" fill="url(#g-glow)" />
+    <svg viewBox="-252 -66 364 216" className="fig-svg" role="img" aria-label={`A graphics card with three fans. ${agents} agents mining.`}>
+      <ellipse cx="-70" cy="48" rx="200" ry="100" fill="url(#g-glow)" />
       <g stroke="#4c1d95" strokeOpacity=".09">
         {grid.map(([a, b], i) => {
           const [x1, y1] = xy(a), [x2, y2] = xy(b);
@@ -166,25 +174,29 @@ export function RigFigure({ agents, idle, label = "ultravein-01" }: { agents: nu
         return <rect key={i} x={x - 1.2} y={y - 5} width="2.4" height="5" fill="#4c1d95" opacity=".55" />;
       })}
       {fans.map((c, i) => <Fan key={i} c={c} r={30} spin={spin && spin * (1 + i * 0.07)} />)}
-      <line x1={ledA[0]} y1={ledA[1]} x2={ledB[0]} y2={ledB[1]} stroke="#2e1065" strokeWidth="1.6" strokeDasharray="10 14" strokeLinecap="round" opacity=".9">
-        {motion && <animate attributeName="stroke-dashoffset" from="0" to="-48" dur="1.2s" repeatCount="indefinite" />}
+      {/* data packets running along the shroud's front edge */}
+      <line x1={ledA[0]} y1={ledA[1]} x2={ledB[0]} y2={ledB[1]} stroke="#7c3aed" strokeWidth="2.2" strokeDasharray="3 21" strokeLinecap="square">
+        {motion && <animate attributeName="stroke-dashoffset" from="0" to="-48" dur="0.9s" repeatCount="indefinite" />}
       </line>
-      {/* heat rising off each fan: the hashrate, drawn */}
-      {fans.map((c, i) => {
-        const [x, y] = xy([c[0], c[1], 40]);
-        return [0, 1, 2].map((k) => (
-          <line key={`${i}-${k}`} x1={x - 10 + k * 10} y1={y} x2={x - 10 + k * 10} y2={y - 14} stroke="#2e1065" strokeWidth="1" strokeLinecap="round" opacity="0">
-            {motion && (
-              <>
-                <animateTransform attributeName="transform" type="translate" values="0 0; 0 -34" dur="2.4s" begin={`${(i * 3 + k) * 0.27}s`} repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0; .7; 0" dur="2.4s" begin={`${(i * 3 + k) * 0.27}s`} repeatCount="indefinite" />
-              </>
-            )}
-          </line>
-        ));
-      })}
+      {/* a scan plane sweeps the card end to end: the hashrate, drawn as a laser pass */}
+      {(() => {
+        const a = xy([4, -6, 44]), b = xy([4, D + 6, 44]), c = xy([4, D + 6, 6]), d = xy([4, -6, 6]);
+        const run = L - 8;
+        const dx = +(run * AX[0]).toFixed(2), dy = +(run * AX[1]).toFixed(2);
+        const sweep = motion ? <animateTransform attributeName="transform" type="translate" values={`0 0; ${dx} ${dy}; ${dx} ${dy}`} keyTimes="0; .85; 1" dur={`${Math.max(1.6, (spin ?? 3) * 1.3)}s`} repeatCount="indefinite" /> : null;
+        return (
+          <g opacity={motion ? 1 : 0}>
+            {sweep}
+            <polygon points={`${a.join(",")} ${b.join(",")} ${c.join(",")} ${d.join(",")}`} fill="#7c3aed" fillOpacity=".07" />
+            <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#7c3aed" strokeWidth="1.2" />
+            <line x1={d[0]} y1={d[1]} x2={c[0]} y2={c[1]} stroke="#7c3aed" strokeWidth=".6" strokeDasharray="2 3" />
+            <circle cx={a[0]} cy={a[1]} r="2" fill="#7c3aed" />
+            <circle cx={b[0]} cy={b[1]} r="2" fill="#7c3aed" />
+          </g>
+        );
+      })()}
       {/* name tag on the open left side, so it never runs past the figure's edge */}
-      <text x={xy([0, D, 40])[0] - 8} y={xy([0, D, 40])[1]} className="fig-tick" style={{ textAnchor: "end" }}>{label}</text>
+      <text x={xy([0, D, 40])[0] + 8} y={xy([0, D, 40])[1]} className="fig-tick" style={{ textAnchor: "start" }}>{label}</text>
     </svg>
   );
 }
@@ -196,8 +208,8 @@ function Roller({ c, r, motion }: { c: V; r: number; motion: boolean }) {
   const [X, Y] = xy(c);
   return (
     <g transform={`matrix(${FRONT_M} ${X} ${Y})`}>
-      <circle r={r}fill="url(#g-right)" stroke="#2e1065" strokeOpacity=".7" strokeWidth=".7" />
-      <g stroke="#2e1065" strokeOpacity=".6" strokeWidth=".7">
+      <circle r={r}fill="url(#g-right)" stroke="#141018" strokeOpacity=".7" strokeWidth=".7" />
+      <g stroke="#141018" strokeOpacity=".6" strokeWidth=".7">
         <line x1={-r} y1="0" x2={r} y2="0" />
         <line x1="0" y1={-r} x2="0" y2={r} />
         {motion && <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="1.4s" repeatCount="indefinite" />}
@@ -222,8 +234,8 @@ export function MachineFigure() {
   for (let j = -10; j <= 110; j += 20) grid.push([[-40, j, 0], [380, j, 0]] as [V, V]);
 
   return (
-    <svg viewBox="-78 -84 436 270" className="fig-svg" role="img" aria-label="A sorting machine: agents ride a conveyor through five inspection stations into PASSED; bots are kicked off into REJECTED.">
-      <ellipse cx="140" cy="50" rx="230" ry="110" fill="url(#g-glow)" />
+    <svg viewBox="-358 -84 436 270" className="fig-svg" role="img" aria-label="A sorting machine: agents ride a conveyor through five inspection stations into PASSED; bots are kicked off into REJECTED.">
+      <ellipse cx="-140" cy="50" rx="230" ry="110" fill="url(#g-glow)" />
       <g stroke="#4c1d95" strokeOpacity=".08">
         {grid.map(([a, b], i) => {
           const [x1, y1] = xy(a), [x2, y2] = xy(b);
@@ -257,7 +269,7 @@ export function MachineFigure() {
 
       {/* intake hopper */}
       <Box at={[-24, 16, 42]} size={[26, 38, 22]} />
-      <polygon points={poly([[-20, 20, 64], [-2, 20, 64], [-2, 50, 64], [-20, 50, 64]])} fill="#1e1534" stroke="#2e1065" strokeOpacity=".5" strokeWidth=".6" />
+      <polygon points={poly([[-20, 20, 64], [-2, 20, 64], [-2, 50, 64], [-20, 50, 64]])} fill="#1e1534" stroke="#141018" strokeOpacity=".5" strokeWidth=".6" />
 
       {/* items on the belt */}
       {BATCH.map((kind, i) => {
@@ -265,7 +277,10 @@ export function MachineFigure() {
         const shape = bot ? (
           <Box at={[-6, -6, 0]} size={[12, 12, 12]} wire />
         ) : (
-          <circle cx="0" cy="-5" r="5.5" fill="url(#g-ball)" stroke="#2e1065" strokeOpacity=".5" strokeWidth=".5" />
+          <g>
+            <circle cx="0" cy="-5" r="5.5" fill="#ffffff" stroke="#7c3aed" strokeWidth="1.3" />
+            <circle cx="0" cy="-5" r="1.8" fill="#7c3aed" />
+          </g>
         );
         if (!motion) {
           const x = bot ? STATIONS[kind] - 16 : 10 + i * 40;
@@ -298,14 +313,31 @@ export function MachineFigure() {
         const [cx, cy] = xy([mid, 35, 72]);
         return (
           <g key={`st${x}`}>
-            <polygon points={poly([[mid, 20, 24], [mid, 50, 24], [mid, 50, 58], [mid, 20, 58]])} fill="#7c3aed" opacity={motion ? 0 : 0.12}>
-              {motion && <animate attributeName="opacity" values="0; .22; 0" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />}
-            </polygon>
+            {/* a laser line drops through the station, top to belt */}
+            {(() => {
+              const [ax, ay] = xy([mid, 20, 57]), [bx, by] = xy([mid, 50, 57]);
+              return (
+                <line x1={ax} y1={ay} x2={bx} y2={by} stroke="#7c3aed" strokeWidth="1.3" opacity={motion ? 0 : 0.5}>
+                  {motion && (
+                    <>
+                      <animateTransform attributeName="transform" type="translate" values="0 0; 0 32" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0; 1; 1; 0" keyTimes="0; .1; .8; 1" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />
+                    </>
+                  )}
+                </line>
+              );
+            })()}
             <Box at={[x, 50, 24]} size={[22, 8, 34]} />
             <Box at={[x, 12, 58]} size={[22, 46, 10]} />
             <Box at={[x + 7, 30, 68]} size={[8, 8, 3]} />
-            <circle cx={cx} cy={cy} r="2.6" fill="#7c3aed">
-              {motion && <animate attributeName="opacity" values=".25; 1; .25" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />}
+            <circle cx={cx} cy={cy} r="2" fill="#7c3aed" />
+            <circle cx={cx} cy={cy} r="2" fill="none" stroke="#7c3aed" strokeWidth=".8" opacity="0">
+              {motion && (
+                <>
+                  <animate attributeName="r" values="2; 9" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />
+                  <animate attributeName="opacity" values=".9; 0" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />
+                </>
+              )}
             </circle>
             <g transform={`translate(${lx} ${ly})`}>
               <rect x="-11" y="-9" width="22" height="13" className="fig-label-box" />
@@ -346,29 +378,29 @@ export function TanksFigure({ pools }: { pools: { symbol: string; balance: bigin
         return (
           <g key={p.symbol}>
             <text x={x + W / 2} y={TOP - 30} className="fig-label" style={{ fontSize: 11 }}>{p.symbol}</text>
-            {/* funding drips in from above */}
-            {motion && level > 0 && (
-              <circle cx={x + W / 2} r="2.6" fill="#7c3aed" opacity="0">
-                <animate attributeName="cy" values={`${TOP - 20}; ${fillTop}`} dur="1.6s" begin={`${i * 0.37}s`} repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0; 1; 0" dur="1.6s" begin={`${i * 0.37}s`} repeatCount="indefinite" />
-              </circle>
-            )}
-            <rect x={x} y={TOP} width={W} height={BOT - TOP} rx="6" fill="#f5f2fd" stroke="url(#g-sheen)" strokeWidth="1" />
+            <rect x={x} y={TOP} width={W} height={BOT - TOP} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".8" />
             {level > 0 && (
               <>
-                <rect x={x + 4} y={fillTop} width={W - 8} height={BOT - fillTop - 4} rx="3" fill="url(#g-liquid)" opacity=".85" />
-                <line x1={x + 4} y1={fillTop} x2={x + W - 4} y2={fillTop} stroke="#ffffff" strokeWidth="1.4">
-                  {motion && <animate attributeName="opacity" values=".4; 1; .4" dur="2.6s" begin={`${i * 0.4}s`} repeatCount="indefinite" />}
-                </line>
+                <rect x={x + 5} y={fillTop} width={W - 10} height={BOT - fillTop - 5} fill="url(#g-liquid)" opacity=".75" />
+                <rect x={x + 5} y={fillTop} width={W - 10} height={BOT - fillTop - 5} fill="url(#g-hatch)" opacity=".5" />
+                <line x1={x - 6} y1={fillTop} x2={x + W + 6} y2={fillTop} stroke="#7c3aed" strokeWidth="1" strokeDasharray="2 2" />
+                {/* bubbles rise through the liquid: the pool is live */}
+                {motion &&
+                  [0.25, 0.55, 0.8].map((k, j) => (
+                    <circle key={k} cx={x + 5 + k * (W - 10)} r="1.8" fill="none" stroke="#ffffff" strokeWidth=".9" opacity="0">
+                      <animate attributeName="cy" values={`${BOT - 8}; ${fillTop + 4}`} dur={`${2.2 + j * 0.5}s`} begin={`${i * 0.3 + j * 0.6}s`} repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0; 1; 1; 0" keyTimes="0; .15; .85; 1" dur={`${2.2 + j * 0.5}s`} begin={`${i * 0.3 + j * 0.6}s`} repeatCount="indefinite" />
+                    </circle>
+                  ))}
               </>
             )}
             {[0.25, 0.5, 0.75].map((k) => (
-              <line key={k} x1={x + W - 10} y1={BOT - k * (BOT - TOP)} x2={x + W} y2={BOT - k * (BOT - TOP)} stroke="#2e1065" strokeOpacity=".35" />
+              <line key={k} x1={x + W - 10} y1={BOT - k * (BOT - TOP)} x2={x + W} y2={BOT - k * (BOT - TOP)} stroke="#141018" strokeOpacity=".35" />
             ))}
             {/* hourly release flows out to the miners' bus */}
             <line x1={x + W / 2} y1={BOT} x2={x + W / 2} y2={BOT + 14} stroke="#4c1d95" strokeOpacity=".5" />
             {motion && level > 0 && (
-              <path d={`M${x + W / 2} ${BOT} V 322 H ${X0 + 4 * (W + GAP) + W / 2 + 20}`} fill="none" stroke="#2e1065" strokeWidth="1.4" strokeDasharray="2 22" opacity=".8">
+              <path d={`M${x + W / 2} ${BOT} V 322 H ${X0 + 4 * (W + GAP) + W / 2 + 20}`} fill="none" stroke="#7c3aed" strokeWidth="3" strokeDasharray="3 21" strokeLinecap="square">
                 <animate attributeName="stroke-dashoffset" from="0" to="-48" dur="1.4s" repeatCount="indefinite" />
               </path>
             )}
@@ -414,7 +446,7 @@ function Scout({ motion }: { motion: boolean }) {
         </ellipse>
         <Box at={[0, 0, 20]} size={[30, 30, 28]} />
         <Front at={[0, 30, 20]}>
-          <rect x="3" y="11" width="24" height="9" rx="2" fill="#1e1534" stroke="#2e1065" strokeOpacity=".4" strokeWidth=".6" />
+          <rect x="3" y="11" width="24" height="9" rx="2" fill="#1e1534" stroke="#141018" strokeOpacity=".4" strokeWidth=".6" />
           <rect x="10" y="13" width="9" height="5" rx="1.5" fill="#ffffff">
             {pulse(motion, "1; 1; .15; 1; 1", "4s")}
           </rect>
@@ -444,7 +476,7 @@ function Rigger({ motion }: { motion: boolean }) {
       <Box at={[30, 6, 22]} size={[6, 10, 20]} />
       <Front at={[0, 24, 16]}>
         {/* chest plate with a chip */}
-        <rect x="8" y="8" width="14" height="12" fill="#1e1534" stroke="#2e1065" strokeOpacity=".5" strokeWidth=".6" />
+        <rect x="8" y="8" width="14" height="12" fill="#1e1534" stroke="#141018" strokeOpacity=".5" strokeWidth=".6" />
         <rect x="12" y="11" width="6" height="6" fill="url(#g-top)">
           {pulse(motion, ".6; 1; .6", "2.2s")}
         </rect>
@@ -457,7 +489,7 @@ function Rigger({ motion }: { motion: boolean }) {
       <Box at={[2, 0, 60]} size={[26, 24, 4]} />
       <Box at={[6, 4, 64]} size={[18, 16, 7]} />
       {/* headlamp and its beam */}
-      <polygon points={`${lamp[0]},${lamp[1]} ${lamp[0] - 46},${lamp[1] + 34} ${lamp[0] - 22},${lamp[1] + 48}`} fill="#7c3aed" opacity=".12">
+      <polygon points={`${lamp[0]},${lamp[1]} ${lamp[0] + 46},${lamp[1] + 34} ${lamp[0] + 22},${lamp[1] + 48}`} fill="#7c3aed" opacity=".12">
         {pulse(motion, ".06; .2; .12; .2; .06", "2.6s")}
       </polygon>
       <circle cx={lamp[0]} cy={lamp[1]} r="3.4" fill="#ffffff" stroke="#4c1d95" strokeWidth=".6" />
@@ -475,7 +507,7 @@ function Sentinel({ motion }: { motion: boolean }) {
       <Box at={[4, 4, 26]} size={[22, 16, 30]} />
       <Box at={[29, 6, 30]} size={[5, 8, 26]} />
       <Front at={[4, 20, 26]}>
-        <circle cx="11" cy="18" r="5" fill="#1e1534" stroke="#2e1065" strokeOpacity=".6" strokeWidth=".7" />
+        <circle cx="11" cy="18" r="5" fill="#1e1534" stroke="#141018" strokeOpacity=".6" strokeWidth=".7" />
         <circle cx="11" cy="18" r="2.6" fill="#ffffff">
           {motion && <animate attributeName="r" values="2; 3.4; 2" dur="1.8s" repeatCount="indefinite" />}
         </circle>
@@ -484,7 +516,7 @@ function Sentinel({ motion }: { motion: boolean }) {
       <Box at={[9, 6, 61]} size={[12, 12, 4]} />
       <Box at={[6, 4, 65]} size={[18, 16, 18]} />
       <Front at={[6, 20, 65]}>
-        <rect x="1" y="7" width="16" height="5" fill="#1e1534" stroke="#2e1065" strokeOpacity=".4" strokeWidth=".5" />
+        <rect x="1" y="7" width="16" height="5" fill="#1e1534" stroke="#141018" strokeOpacity=".4" strokeWidth=".5" />
         <rect x="2" y="8" width="4" height="3" fill="#ffffff">
           {motion && <animate attributeName="x" values="2; 12; 2" dur="2.4s" repeatCount="indefinite" />}
         </rect>
@@ -502,9 +534,22 @@ export function AgentAvatar({ kind, size = 120, still }: { kind: string; size?: 
   const C = CHARACTERS[kind as keyof typeof CHARACTERS] ?? Scout;
   const pad: V[] = [[-12, -12, 0], [42, -12, 0], [42, 42, 0], [-12, 42, 0]];
   return (
-    <svg viewBox="-56 -100 120 140" width={size} height={size * (140 / 120)} className="avatar" role="img" aria-label={`${kind} agent`}>
-      <ellipse cx="4" cy="14" rx="56" ry="30" fill="url(#g-glow)" />
-      <polygon points={poly(pad)} fill="#ffffff" stroke="url(#g-sheen)" strokeWidth=".8" />
+    <svg viewBox="-64 -100 120 140" width={size} height={size * (140 / 120)} className="avatar" role="img" aria-label={`${kind} agent`}>
+      <ellipse cx="-4" cy="14" rx="56" ry="30" fill="url(#g-glow)" />
+      <polygon points={poly(pad)} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".7" />
+      {/* an orbit ring on the floor, a violet tick riding it */}
+      {(() => {
+        const [X, Y] = xy([15, 15, 0]);
+        return (
+          <g transform={`matrix(${TOP_M} ${X} ${Y})`}>
+            <circle r="36" fill="none" stroke="#141018" strokeOpacity=".3" strokeWidth=".6" strokeDasharray="1.5 3" />
+            <g>
+              <circle cx="36" cy="0" r="2.4" fill="#7c3aed" />
+              {motion && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />}
+            </g>
+          </g>
+        );
+      })()}
       <C motion={motion} />
     </svg>
   );

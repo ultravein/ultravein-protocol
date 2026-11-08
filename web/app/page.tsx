@@ -207,7 +207,8 @@ export default function Home() {
         <div className="bento">
           <div className="bento__tanks">
             <span className="bento__cap">pool levels</span>
-            <TanksFigure pools={pools.map((p) => ({ symbol: p.symbol, balance: BigInt(p.balance) }))} />
+            {/* before stats load (or with no pool deployed) draw the five tanks empty, not a blank panel */}
+            <TanksFigure pools={pools.length ? pools.map((p) => ({ symbol: p.symbol, balance: BigInt(p.balance) })) : ["ETH", TOKEN_SYMBOL, "MSFT", "AAPL", "NVDA"].map((symbol) => ({ symbol, balance: 0n }))} />
           </div>
           {pools.map((p) => (
             <div key={p.address} className="bento__cell">
