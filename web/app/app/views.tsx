@@ -4,7 +4,8 @@ import { formatUnits, zeroAddress } from "viem";
 import { ASSETS, AVATARS, EPOCH_SECONDS, SESSION_SECONDS, TIERS, TOKEN_SYMBOL, type TierId } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { Chart, Segmented, type Datum } from "../charts";
-import { AgentAvatar, ChipIcon, HourBlocks, MachineFigure, RigFigure, TanksFigure } from "../iso";
+import { AgentAvatar, ChipIcon, HourBlocks, MachineFigure, TanksFigure } from "../iso";
+import { Gpu3D } from "../gpu3d";
 
 // --- shared types and helpers ------------------------------------------------------
 
@@ -278,6 +279,9 @@ export function Machine({ d }: { d: Dash }) {
   const balance = BigInt(me?.balance ?? "0");
   const next = TIERS.find((t) => t.minHold > balance);
   const progress = running ? (d.now - running.start) / SESSION_SECONDS : 0;
+  // the 3D card shows the machine you run on; the switcher previews the others
+  const [preview, setPreview] = useState<TierId | null>(null);
+  const shown = tierOf(preview) ?? eff ?? chosen ?? TIERS[0];
   const checks: [string, boolean, string][] = [
     ["Signature", !!me?.agent, me?.agent ? "agent signed by this wallet" : "deploy an agent first"],
     ["Hold check", !!eff, eff ? `balance covers ${eff.name}` : `hold ${fmt(TIERS[0].minHold)} to mine`],
@@ -292,8 +296,8 @@ export function Machine({ d }: { d: Dash }) {
       </Head>
       <ConnectHint d={d} />
       <div className="dgrid dgrid--2-1">
-        <Panel title={me?.agent?.name ?? "No agent yet"} aside={<span className="label">{eff?.name ?? chosen?.name ?? "—"} · {symbolOf(running?.asset ?? me?.agent?.asset ?? zeroAddress)}</span>} className="dpanel--fig">
-          <RigFigure agents={running ? 4 : 0} idle={!running} label={me?.agent?.name ?? "no agent"} />
+        <Panel title={`${shown.name} · 3D`} aside={<Segmented value={shown.id} onChange={(v) => setPreview(v as TierId)} label="Preview a machine" options={TIERS.map((t) => ({ id: t.id, label: t.name }))} />} className="dpanel--fig">
+          <Gpu3D tier={shown.id} running={!!running && shown.id === (eff ?? chosen)?.id} label={shown.name} />
           <div className="meter">
             <div className="meter__bar"><i style={{ transform: `scaleX(${Math.min(1, progress)})` }} /></div>
             <div className="meter__row"><span className="label">Session</span><span>{running ? `${Math.floor(progress * 100)}% · ${hms(running.end - d.now)} left` : "idle"}</span></div>
