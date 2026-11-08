@@ -27,10 +27,16 @@ export function minBalance(account: string, balanceAtHead: bigint, transfers: Tr
   return min; // includes the balance at the start of the window
 }
 
-/** Highest tier the balance covers, never above the chosen one. */
-export function effectiveTier(chosen: Tier, balance: bigint): Tier | undefined {
+/**
+ * Highest tier the wallet can run, never above the chosen one: a VGA it bought (`owned` is the
+ * 1-based tier number from MiningPool.cardOf, 0 = none; bought cards need no holding) or the
+ * best one its balance covers.
+ */
+export function effectiveTier(chosen: Tier, balance: bigint, owned = 0): Tier | undefined {
   let best: Tier | undefined;
-  for (const t of TIERS) if (t.minHold <= balance && t.hashrate <= chosen.hashrate) best = t;
+  TIERS.forEach((t, i) => {
+    if ((i < owned || t.minHold <= balance) && t.hashrate <= chosen.hashrate) best = t;
+  });
   return best;
 }
 

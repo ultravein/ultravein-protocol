@@ -55,6 +55,15 @@ describe("effectiveTier", () => {
   it("is undefined below the lowest tier", () => {
     expect(effectiveTier(TIERS[3], TIERS[0].minHold - 1n)).toBeUndefined();
   });
+  it("a bought VGA runs with nothing held", () => {
+    expect(effectiveTier(TIERS[3], 0n, 3)?.id).toBe(TIERS[2].id);
+  });
+  it("a bought VGA is still capped at the chosen tier", () => {
+    expect(effectiveTier(TIERS[1], 0n, 4)?.id).toBe(TIERS[1].id);
+  });
+  it("holding can beat the bought card", () => {
+    expect(effectiveTier(TIERS[3], TIERS[3].minHold, 1)?.id).toBe(TIERS[3].id);
+  });
 });
 
 describe("overlapSeconds", () => {

@@ -6,17 +6,17 @@ import { isFresh, messageFor, validName } from "../lib/auth";
 const acct = privateKeyToAccount("0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d");
 
 describe("auth", () => {
-  it("round-trips a signed agent message", async () => {
-    const msg = messageFor({ action: "agent", address: acct.address, name: "Rig", tier: "a100", asset: "0x0", avatar: "scout", ts: 1 });
+  it("round-trips a signed rig message", async () => {
+    const msg = messageFor({ action: "rig", address: acct.address, name: "Rig", tier: "a100", asset: "0x0", ts: 1 });
     const signature = await acct.signMessage({ message: msg });
     expect(await verifyMessage({ address: acct.address, message: msg, signature })).toBe(true);
     expect(msg).toContain(`address: ${acct.address.toLowerCase()}`);
   });
 
   it("binds every field: a changed tier changes the message", () => {
-    const base = { action: "agent" as const, address: acct.address, name: "Rig", asset: "0x0", avatar: "scout", ts: 1 };
+    const base = { action: "rig" as const, address: acct.address, name: "Rig", asset: "0x0", ts: 1 };
     expect(messageFor({ ...base, tier: "a100" })).not.toBe(messageFor({ ...base, tier: "h100" }));
-    expect(messageFor({ ...base, tier: "a100" })).not.toBe(messageFor({ ...base, tier: "a100", avatar: "rigger" }));
+    expect(messageFor({ ...base, tier: "a100" })).not.toBe(messageFor({ ...base, tier: "a100", asset: "0x1" }));
   });
 
   it("rejects stale, future and replayed timestamps", () => {

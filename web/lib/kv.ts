@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { Redis } from "@upstash/redis";
-import type { AvatarId, TierId } from "./config";
+import type { TierId } from "./config";
 
-// avatar is optional: agents saved before characters existed have none
-export type Agent = { name: string; tier: TierId; asset: string; createdAt: number; avatar?: AvatarId };
+// A wallet's VGA rig. (Stored under the old "agent" keys, so existing records still load.)
+export type Agent = { name: string; tier: TierId; asset: string; createdAt: number };
 export type Session = { start: number; end: number; tier: TierId; asset: string };
 
 interface Store {

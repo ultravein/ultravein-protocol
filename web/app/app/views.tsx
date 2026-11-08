@@ -1,19 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { formatUnits, zeroAddress } from "viem";
-import { ASSETS, AVATARS, EPOCH_SECONDS, SESSION_SECONDS, TIERS, TOKEN_SYMBOL, type TierId } from "@/lib/config";
+import { ASSETS, EPOCH_SECONDS, SESSION_SECONDS, TIERS, TOKEN_SYMBOL, type TierId } from "@/lib/config";
 import { fmt } from "@/lib/format";
 import { Chart, Segmented, type Datum } from "../charts";
-import { AgentAvatar, ChipIcon, HourBlocks, MachineFigure, TanksFigure } from "../iso";
+import { ChipIcon, HourBlocks, MachineFigure, TanksFigure } from "../iso";
 import { Gpu3D } from "../gpu3d";
 
 // --- shared types and helpers ------------------------------------------------------
 
 export type Me = {
-  agent: { name: string; tier: TierId; asset: string; avatar?: string } | null;
+  agent: { name: string; tier: TierId; asset: string } | null; // the wallet's VGA rig
   session: { start: number; end: number; tier: TierId; asset: string } | null;
   balance: string;
   effectiveTier: TierId | null;
+  owned: TierId | null; // VGA bought from the shop, kept for good
   perHour: string;
   earned: Record<string, string>;
   wallet: Record<string, string>;
@@ -23,8 +24,8 @@ export type Hist = { e: number; asset: string; amount: string; tier: string | nu
 export type Act = { ts: number; kind: "agent" | "session"; text: string };
 export type Net = { e: number; agents: number; hashrate: Record<string, string>; pools: Record<string, string>; emitted: Record<string, string> };
 export type Pool = { symbol: string; address: string; balance: string; committed: string; claimed: string; emissionPerHour: string; hashrate: string };
-export type Row = { address: string; name: string; avatar?: string; tier: string; asset: string; end: number; hashrate: string };
-export type Stats = { deployed: number; pools: Pool[]; agents: Row[] };
+export type Row = { address: string; name: string; tier: string; asset: string; end: number; hashrate: string };
+export type Stats = { deployed: number; pools: Pool[]; agents: Row[]; shop: { token: string | null; prices: string[] } };
 
 export type Dash = {
   connected: boolean;
@@ -37,7 +38,8 @@ export type Dash = {
   net: Net[];
   stats: Stats | null;
   busy: boolean;
-  saveAgent: (name: string, tier: TierId, asset: string, avatar: string) => void;
+  saveAgent: (name: string, tier: TierId, asset: string) => void;
+  buyCard: (tier: TierId) => void;
   startSession: () => void;
   claim: (asset: string) => void;
   go: (tab: string) => void;
@@ -93,7 +95,7 @@ function Panel({ title, aside, children, className = "" }: { title?: string; asi
 
 function ConnectHint({ d }: { d: Dash }) {
   if (d.connected) return null;
-  return <div className="hint">Not connected. Use <b>Connect wallet</b> in the header to load your agent, earnings and claims.</div>;
+  return <div className="hint">Not connected. Use <b>Connect wallet</b> in the header to load your VGA, earnings and claims.</div>;
 }
 
 /** Earned per epoch for one asset, last `n` epochs, zero-filled. */
@@ -118,31 +120,32 @@ export function Overview({ d }: { d: Dash }) {
   const asset = running?.asset ?? me?.agent?.asset ?? zeroAddress;
   const elapsed = running ? (d.now - running.start) / SESSION_SECONDS : 0;
   const claimableAssets = Object.values(d.proofs).filter((p) => BigInt(p.claimable) > 0n).length;
+  const card = eff ?? chosen ?? TIERS[0];
   return (
     <>
-      <Head kicker="01" title={me?.agent ? `Agent ${me.agent.name}` : "Overview"}>
-        {!me?.agent && <button className="btn" onClick={() => d.go("create")}>Create your agent <span aria-hidden="true">→</span></button>}
+      <Head kicker="01" title={me?.agent ? `Rig ${me.agent.name}` : "Overview"}>
+        {!me?.agent && <button className="btn" onClick={() => d.go("create")}>Deploy a VGA <span aria-hidden="true">→</span></button>}
       </Head>
       <ConnectHint d={d} />
       <div className="tiles">
-        <Tile i={0} label={`${TOKEN_SYMBOL} balance`} value={d.connected ? fmt(me?.balance ?? "0") : "—"} sub="powers your card" />
-        <Tile i={1} label="Machine" value={eff?.name ?? chosen?.name ?? "—"} sub={eff ? `${eff.hashrate} H/s${chosen && chosen.id !== eff.id ? ` · picked ${chosen.name}` : ""}` : "no tier covered yet"} />
+        <Tile i={0} label={`${TOKEN_SYMBOL} balance`} value={d.connected ? fmt(me?.balance ?? "0") : "—"} sub={me?.owned ? "your VGA is bought, no hold needed" : "unlocks a free VGA"} />
+        <Tile i={1} label="VGA" value={eff?.name ?? chosen?.name ?? "—"} sub={eff ? `${eff.hashrate} H/s · ${me?.owned === eff.id ? "owned" : "held"}` : "none running yet"} />
         <Tile i={2} label="Est. per hour" value={running ? fmt(me?.perHour ?? "0") : "—"} sub={running ? symbolOf(running.asset) : "start a session"} />
         <Tile i={3} label="Earned" value={fmt(me?.earned?.[asset] ?? "0")} sub={`${symbolOf(asset)} · ${claimableAssets} claimable`} />
       </div>
-      {/* row 1: the agent on its scan stage beside the 12-hour block rail */}
+      {/* row 1: your VGA in 3D beside the 12-hour block rail */}
       <div className="dgrid dgrid--1-2">
-        <Panel title={me?.agent ? me.agent.name : "Your agent"} aside={<span className={`state ${running ? "is-on" : ""}`}>{running ? "digging" : "idle"}</span>}>
+        <Panel title={me?.agent ? me.agent.name : "Your VGA"} aside={<span className={`state ${running ? "is-on" : ""}`}>{running ? "mining" : "idle"}</span>}>
           <div className={`agent-stage ${running ? "is-live" : ""}`}>
-            <AgentAvatar kind={me?.agent?.avatar ?? "scout"} size={200} still={!running} />
+            <Gpu3D tier={card.id} running={!!running} label={card.name} />
             {me?.agent ? (
               <dl className="agent-stage__tags">
-                <div><dt>Character</dt><dd>{AVATARS.find((a) => a.id === (me.agent?.avatar ?? "scout"))?.name}</dd></div>
-                <div><dt>Rig</dt><dd>{eff?.name ?? chosen?.name ?? "—"}</dd></div>
+                <div><dt>VGA</dt><dd>{card.name}</dd></div>
+                <div><dt>Source</dt><dd>{me.owned === card.id ? "bought" : eff ? "held" : "—"}</dd></div>
                 <div><dt>Vein</dt><dd>{symbolOf(asset)}</dd></div>
               </dl>
             ) : (
-              <button className="btn" onClick={() => d.go("create")}>Create your agent <span aria-hidden="true">→</span></button>
+              <button className="btn" onClick={() => d.go("create")}>Deploy a VGA <span aria-hidden="true">→</span></button>
             )}
           </div>
         </Panel>
@@ -150,7 +153,7 @@ export function Overview({ d }: { d: Dash }) {
           <div className="session">
             <HourBlocks progress={elapsed} running={!!running} />
             {running ? (
-              <p className="muted">Tapping {symbolOf(running.asset)} with {eff?.name ?? "no rig"}. Each lit block is an hour already settled.</p>
+              <p className="muted">Mining {symbolOf(running.asset)} on {eff?.name ?? "no VGA"}. Each lit block is an hour already settled.</p>
             ) : (
               <button className="btn" onClick={d.startSession} disabled={d.busy || !me?.agent}>Start mining</button>
             )}
@@ -169,65 +172,64 @@ export function Overview({ d }: { d: Dash }) {
   );
 }
 
-// --- Create agent ------------------------------------------------------------------
+// --- Deploy VGA --------------------------------------------------------------------
 
-export function CreateAgent({ d }: { d: Dash }) {
+/** Two ways onto the network: deploy a VGA your held balance unlocks, or buy one for good. */
+export function DeployVga({ d }: { d: Dash }) {
   const me = d.me;
   const [name, setName] = useState(me?.agent?.name ?? "");
   const [tier, setTier] = useState<TierId>(me?.agent?.tier ?? TIERS[0].id);
   const [asset, setAsset] = useState<string>(me?.agent?.asset ?? ASSETS[0].address);
-  const [avatar, setAvatar] = useState<string>(me?.agent?.avatar ?? AVATARS[0].id);
-  // fill the form once the saved agent arrives (it loads after the first render)
+  // fill the form once the saved rig arrives (it loads after the first render)
   const saved = me?.agent;
   useEffect(() => {
     if (!saved) return;
     setName(saved.name);
     setTier(saved.tier);
     setAsset(saved.asset);
-    if (saved.avatar) setAvatar(saved.avatar);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- react to saved values, not each poll's new object
-  }, [saved?.name, saved?.tier, saved?.asset, saved?.avatar]);
+  }, [saved?.name, saved?.tier, saved?.asset]);
   const balance = BigInt(me?.balance ?? "0");
+  const ownedIdx = me?.owned ? TIERS.findIndex((x) => x.id === me.owned) : -1;
   const t = tierOf(tier)!;
+  const prices = d.stats?.shop.prices ?? [];
   return (
     <>
-      <Head kicker="02" title={me?.agent ? "Edit your agent" : "Create your agent"} />
+      <Head kicker="02" title={me?.agent ? "Your VGA" : "Deploy a VGA"} />
       <ConnectHint d={d} />
       <div className="dgrid dgrid--2-1">
         <div className="stack">
-          <Panel title="01 · Character" aside={<span className="label">cosmetic · never changes earnings</span>}>
-            <div className="chars" role="radiogroup" aria-label="Agent character">
-              {AVATARS.map((a) => (
-                <button key={a.id} role="radio" aria-checked={avatar === a.id} className={`char ${avatar === a.id ? "is-on" : ""}`} onClick={() => setAvatar(a.id)}>
-                  <AgentAvatar kind={a.id} size={132} still={avatar !== a.id} />
-                  <b>{a.name}</b>
-                  <small>{a.line}</small>
-                </button>
-              ))}
-            </div>
-          </Panel>
-          <Panel title="02 · Name">
-            <input placeholder="Agent name (1-32 characters)" aria-label="Agent name" value={name} maxLength={32} onChange={(e) => setName(e.target.value)} />
-          </Panel>
-          <Panel title="03 · Machine" aside={<span className="label">optional · your balance unlocks it</span>}>
+          <Panel title="01 · Pick a VGA" aside={<span className="label">hold to deploy free · or buy it for good</span>}>
             <div className="gpus">
-              {TIERS.map((x) => {
-                const locked = d.connected && balance < x.minHold;
-                const per1m = Number(x.hashrate) / (Number(x.minHold / 10n ** 18n) / 1e6);
+              {TIERS.map((x, i) => {
+                const owned = i <= ownedIdx;
+                const held = balance >= x.minHold;
+                const price = BigInt(prices[i] ?? "0");
                 return (
-                  <button key={x.id} className={`gpu ${tier === x.id ? "is-on" : ""} ${locked ? "is-locked" : ""}`} disabled={locked} aria-pressed={tier === x.id} onClick={() => setTier(x.id)}>
-                    <ChipIcon size={30} dim={locked} />
-                    <b>{x.name}</b>
-                    <span>{x.hashrate.toString()} H/s</span>
-                    <small>hold {fmt(x.minHold)}</small>
-                    <small>{per1m.toFixed(1)} H/s per 1M</small>
-                    {locked && <em>locked</em>}
-                  </button>
+                  <div key={x.id} className={`gpu ${tier === x.id ? "is-on" : ""}`}>
+                    <button className="gpu__pick" aria-pressed={tier === x.id} onClick={() => setTier(x.id)}>
+                      <ChipIcon size={30} dim={d.connected && !owned && !held} />
+                      <b>{x.name}</b>
+                      <span>{x.hashrate.toString()} H/s</span>
+                      <small>free if you hold {fmt(x.minHold)}</small>
+                    </button>
+                    {owned ? (
+                      <em className="gpu__tag is-owned">owned</em>
+                    ) : price > 0n ? (
+                      <button className="btn btn--sm gpu__buy" onClick={() => d.buyCard(x.id)} disabled={d.busy}>Buy · {fmt(price)} {TOKEN_SYMBOL}</button>
+                    ) : (
+                      <em className="gpu__tag">{held && d.connected ? "unlocked" : "sale opens at launch"}</em>
+                    )}
+                  </div>
                 );
               })}
             </div>
+            <p className="fine">A bought VGA is yours for good and mines without holding. Its price goes straight into the {TOKEN_SYMBOL} reward pool.</p>
           </Panel>
-          <Panel title="04 · Reward">
+          <Panel title="02 · Name your rig">
+            <input placeholder="Rig name (1-32 characters)" aria-label="Rig name" value={name} maxLength={32} onChange={(e) => setName(e.target.value)} />
+          </Panel>
+          <Panel title="03 · Reward vein">
             <div className="chips">
               {ASSETS.map((a) => (
                 <button key={a.address} className={`chip chip--btn ${asset === a.address ? "is-on" : ""}`} aria-pressed={asset === a.address} onClick={() => setAsset(a.address)}>{a.symbol}</button>
@@ -238,28 +240,28 @@ export function CreateAgent({ d }: { d: Dash }) {
         </div>
         <div className="stack">
           <Panel title="Preview">
+            <Gpu3D tier={t.id} running={false} label={t.name} />
             <div className="rig rig--preview">
-              <div className="preview__stage"><AgentAvatar kind={avatar} size={150} /></div>
               <div className="rig__top">
-                <div className="rig__id"><b>{name.trim() || "Your agent"}</b><span>{d.address ? `${d.address.slice(0, 6)}…${d.address.slice(-4)}` : "0x…"}</span></div>
+                <div className="rig__id"><b>{name.trim() || "Your rig"}</b><span>{d.address ? `${d.address.slice(0, 6)}…${d.address.slice(-4)}` : "0x…"}</span></div>
                 <span className="live">ready</span>
               </div>
               <div className="rig__stats">
-                <div><span className="label">Machine</span><b>{t.name}</b></div>
+                <div><span className="label">VGA</span><b>{t.name}</b></div>
                 <div><span className="label">Hashrate</span><b>{t.hashrate.toString()} H/s</b></div>
                 <div><span className="label">Mines</span><b>{symbolOf(asset)}</b></div>
               </div>
               <div className="rig__foot">This is how it appears on the board.</div>
             </div>
-            <button className="btn btn--block" style={{ marginTop: 16 }} onClick={() => d.saveAgent(name.trim(), tier, asset, avatar)} disabled={d.busy || !name.trim()}>
-              {me?.agent ? "Save agent" : "Deploy agent"} <span aria-hidden="true">→</span>
+            <button className="btn btn--block" style={{ marginTop: 16 }} onClick={() => d.saveAgent(name.trim(), tier, asset)} disabled={d.busy || !name.trim()}>
+              {me?.agent ? "Save rig" : "Deploy VGA"} <span aria-hidden="true">→</span>
             </button>
             <p className="fine">One signature. No gas.</p>
           </Panel>
           <Panel title="After deploying">
             <ol className="checklist checklist--tight">
               <li><span>01</span><div><b>Start a session</b><p>12 hours of mining, from the Machine tab.</p></div></li>
-              <li><span>02</span><div><b>Hold through each hour</b><p>The lowest balance in the hour sets your card.</p></div></li>
+              <li><span>02</span><div><b>Keep it powered</b><p>A held VGA needs your balance through each hour. A bought one does not.</p></div></li>
               <li><span>03</span><div><b>Claim</b><p>From Portfolio, once a root passes its 30-minute window.</p></div></li>
             </ol>
           </Panel>
@@ -268,7 +270,6 @@ export function CreateAgent({ d }: { d: Dash }) {
     </>
   );
 }
-
 // --- Machine -----------------------------------------------------------------------
 
 export function Machine({ d }: { d: Dash }) {
@@ -283,10 +284,10 @@ export function Machine({ d }: { d: Dash }) {
   const [preview, setPreview] = useState<TierId | null>(null);
   const shown = tierOf(preview) ?? eff ?? chosen ?? TIERS[0];
   const checks: [string, boolean, string][] = [
-    ["Signature", !!me?.agent, me?.agent ? "agent signed by this wallet" : "deploy an agent first"],
+    ["Signature", !!me?.agent, me?.agent ? "rig signed by this wallet" : "deploy a VGA first"],
     ["Hold check", !!eff, eff ? `balance covers ${eff.name}` : `hold ${fmt(TIERS[0].minHold)} to mine`],
     ["Session", !!running, running ? `${hms(running.end - d.now)} left` : "no session running"],
-    ["Split-proof tiers", true, "one wallet, one agent"],
+    ["Split-proof tiers", true, "one wallet, one rig"],
     ["Release cap", true, "pool pays at most 5% a day"],
   ];
   return (
@@ -350,7 +351,7 @@ function events(d: Dash): Event[] {
 
 function Timeline({ d, limit, filter = "all" }: { d: Dash; limit?: number; filter?: string }) {
   const list = events(d).filter((e) => filter === "all" || (filter === "earn" ? e.kind === "earn" || e.kind === "idle" : e.kind === "agent" || e.kind === "session"));
-  if (!list.length) return <p className="muted empty-p">Nothing yet. Deploy an agent and start a session.</p>;
+  if (!list.length) return <p className="muted empty-p">Nothing yet. Deploy a VGA and start a session.</p>;
   return (
     <ol className="tl">
       {list.slice(0, limit).map((e, i) => (
@@ -375,10 +376,10 @@ export function Activity({ d }: { d: Dash }) {
       <Head kicker="04" title="Activity" />
       <ConnectHint d={d} />
       <Panel title="Minutes on the vein per hour" aside={<span className="label">last 48 epochs</span>}>
-        <Chart data={minutes} unit="min" title="Minutes on the vein per hour" empty="Nothing dug yet. Every hour your agent spends on the vein shows up here." />
+        <Chart data={minutes} unit="min" title="Minutes on the vein per hour" empty="Nothing dug yet. Every hour your VGA spends on the vein shows up here." />
       </Panel>
       <div className="dgrid dgrid--1-1">
-        <Panel title="Timeline" aside={<Segmented value={filter} onChange={setFilter} label="Filter activity" options={[{ id: "all", label: "All" }, { id: "earn", label: "Earnings" }, { id: "agent", label: "Agent" }]} />}>
+        <Panel title="Timeline" aside={<Segmented value={filter} onChange={setFilter} label="Filter activity" options={[{ id: "all", label: "All" }, { id: "earn", label: "Earnings" }, { id: "agent", label: "Rig" }]} />}>
           <Timeline d={d} limit={40} filter={filter} />
         </Panel>
         <Panel title="Epochs">
@@ -515,16 +516,16 @@ export function Leaderboard({ d }: { d: Dash }) {
       </Head>
       <Panel>
         {rows.length === 0 ? (
-          <p className="muted empty-p">No agents are mining right now. Start a session and take the top spot.</p>
+          <p className="muted empty-p">No VGA is mining right now. Start a session and take the top spot.</p>
         ) : (
           <div className="table-wrap">
             <table className="dtable dtable--board">
-              <thead><tr><th>#</th><th>Agent</th><th>Card</th><th>H/s</th><th>Mines</th><th>Session left</th></tr></thead>
+              <thead><tr><th>#</th><th>Rig</th><th>VGA</th><th>H/s</th><th>Mines</th><th>Session left</th></tr></thead>
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={r.address} className={r.address === d.address ? "is-me" : ""}>
                     <td>{pad(i + 1)}</td>
-                    <td><span className="who"><AgentAvatar kind={r.avatar ?? "scout"} size={30} still /><b>{r.name}</b><small>{r.address.slice(0, 6)}…{r.address.slice(-4)}</small></span></td>
+                    <td><span className="who"><ChipIcon size={24} /><b>{r.name}</b><small>{r.address.slice(0, 6)}…{r.address.slice(-4)}</small></span></td>
                     <td>{tierOf(r.tier)?.name}</td>
                     <td>{r.hashrate}</td>
                     <td>{symbolOf(r.asset)}</td>

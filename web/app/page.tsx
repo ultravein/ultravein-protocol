@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { zeroAddress } from "viem";
 import { EPOCH_SECONDS, POOL_ADDRESS, SESSION_SECONDS, TIERS, TOKEN_ADDRESS, TOKEN_SYMBOL, appLink } from "@/lib/config";
 import { fmt } from "@/lib/format";
-import { AgentAvatar, ChipIcon, MachineFigure, RigFigure, SilverDefs, TanksFigure } from "./iso";
+import { ChipIcon, MachineFigure, RigFigure, SilverDefs, TanksFigure } from "./iso";
 
 type Pool = { symbol: string; address: string; balance: string; committed: string; claimed: string; emissionPerHour: string; hashrate: string };
-type Agent = { address: string; name: string; avatar?: string; tier: string; asset: string; end: number; hashrate: string };
-type Stats = { deployed: number; pools: Pool[]; agents: Agent[] };
+type Agent = { address: string; name: string; tier: string; asset: string; end: number; hashrate: string };
+type Stats = { deployed: number; pools: Pool[]; agents: Agent[]; shop: { token: string | null; prices: string[] } };
 
 const EXPLORER = "https://robinhoodchain.blockscout.com/address/";
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -29,39 +29,40 @@ function Tag({ kind = "open", children }: { kind?: "open" | "planned" | "none"; 
   return <span className={`tag tag--${kind}`}>{children}</span>;
 }
 
-// agent.log lines typed into the hero console; `d` is when each appears (ms)
+// rig.log lines typed into the hero console; `d` is when each appears (ms)
 const LOG: { t: string; cls?: string; d: number }[] = [
-  { t: "agent vesper clocked in", cls: "ok", d: 300 },
-  { t: "rig      H100 · 120 H/s", cls: "dim", d: 900 },
+  { t: "rig vesper online", cls: "ok", d: 300 },
+  { t: "vga      H100 · 120 H/s", cls: "dim", d: 900 },
   { t: "vein     NVDA", cls: "dim", d: 1300 },
-  { t: "dig      12h opened", d: 1900 },
-  { t: "check    stake held", cls: "dim", d: 2700 },
+  { t: "session  12h opened", d: 1900 },
+  { t: "check    power held", cls: "dim", d: 2700 },
   { t: "yield    +0.0041 NVDA", cls: "ok", d: 3300 },
-  { t: "check    stake held", cls: "dim", d: 4300 },
+  { t: "check    power held", cls: "dim", d: 4300 },
   { t: "yield    +0.0039 NVDA", cls: "ok", d: 4900 },
   { t: "cashout  ready", d: 5800 },
 ];
 
 const SHIFT = [
-  { at: 0, h: "Assign", p: "Name your agent and choose the vein it taps. One signature." },
-  { at: 0.08, h: "Clock in", p: "One more signature puts it on the vein for 12 hours. No gas." },
-  { at: 0.5, h: "Hourly yield", p: "Every hour your stake stays put, it draws a cut of that pool." },
-  { at: 1, h: "Cash out", p: "Claim the yield when you want, then clock it back in." },
+  { at: 0, h: "Deploy", p: "Name your rig, pick a VGA and the vein it mines. One signature." },
+  { at: 0.08, h: "Power on", p: "One more signature runs it on the vein for 12 hours. No gas." },
+  { at: 0.5, h: "Hourly yield", p: "Every hour it stays powered, it draws a cut of that pool." },
+  { at: 1, h: "Cash out", p: "Claim the yield when you want, then power it on again." },
 ];
 
 const RULES = [
   { h: "Owner-signed", p: "Your wallet signs each action exactly once. A replayed signature is turned away." },
-  { h: "Lowest balance", p: "Only the lowest balance you held during the hour counts. Dip for a minute and the whole hour sees it." },
-  { h: "Clocked in", p: "An agent digs for 12 hours, then stops. Left idle, it stops drawing from the pool." },
-  { h: "No split bonus", p: "A heavier rig never pays less per token, so spreading one bag across wallets never earns more." },
+  { h: "Lowest balance", p: "A held VGA counts only the lowest balance of the hour. A bought VGA skips this check." },
+  { h: "On a session", p: "A VGA mines for 12 hours, then stops. Left idle, it stops drawing from the pool." },
+  { h: "No split bonus", p: "A bigger VGA never pays less per token, so spreading one bag across wallets never earns more." },
   { h: "Rate-limited", p: "No payout can take more than 5% of a pool per day, and each one can be vetoed for 30 minutes." },
 ];
 
 const FAQ = [
-  ["What is my agent really doing?", "Holding your spot on a vein. For each hour of its 12-hour dig that your stake stays in place, it collects a share of the asset you chose."],
-  ["Do I need my own hardware?", "No. The rig is a setting in the app. How much you hold decides which rigs you can power."],
-  ["What costs gas?", "Only claiming. Assigning an agent and clocking it in are signatures."],
-  ["What happens if I sell during a dig?", "Your agent steps down to the rig your lowest balance in that hour can power. Below the smallest rig, that hour pays nothing."],
+  ["What does my VGA actually do?", "It holds your spot on a vein. For each hour of its 12-hour session that it stays powered, it collects a share of the asset you chose."],
+  ["Do I need real hardware?", "No. Every VGA is virtual and runs on the network. Hold enough to deploy one free, or buy one from us."],
+  ["What does buying a VGA get me?", `That card for good, paid once in ${TOKEN_SYMBOL}. It mines without holding, an upgrade costs only the difference, and the whole price goes into the ${TOKEN_SYMBOL} reward pool.`],
+  ["What costs gas?", "Claiming, and buying a VGA. Deploying one and starting sessions are signatures."],
+  ["What happens if I sell during a session?", "A held VGA steps down to the card your lowest balance in that hour covers. A bought VGA keeps running."],
   ["Can the team drain a pool?", "Only funds nobody has earned, through a public on-chain withdrawal that waits 48 hours."],
   ["My ETH claim disappeared. Why?", "Some wallets carry an EIP-7702 sweeper delegation that forwards any ETH they receive. Check yours before you claim."],
 ];
@@ -103,14 +104,14 @@ export default function Home() {
       {/* hero: copy on the left, the rig on a framed stage on the right, gauges as one strip */}
       <section className="deck-hero">
         <div className="deck-hero__copy">
-          <p className="eyebrow"><span className="live">On the vein now · {agents.length}</span> agents digging on Robinhood Chain</p>
-          <h1 className="deck-hero__title">Your agent, <span className="u-sheen">on the vein.</span></h1>
+          <p className="eyebrow"><span className="live">On the vein now · {agents.length}</span> VGAs mining on Robinhood Chain</p>
+          <h1 className="deck-hero__title">Your VGA,<br /> <span className="u-sheen">on the vein.</span></h1>
           <p className="deck-hero__sub">
-            Put an agent on the vein for 12 hours and it pulls ETH, {TOKEN_SYMBOL} or a tokenized stock out of the pool for you, hour after hour. You choose the rig it digs with. What you hold powers it.
+            Deploy a VGA free with what you hold, or buy one from us and keep it for good. Every 12-hour session, it mines ETH, {TOKEN_SYMBOL} or a tokenized stock out of the pool for you, hour after hour.
           </p>
           <div className="deck-hero__ctas">
-            <a className="btn btn--lg" href={appLink("#create")}>Put your agent to work <span aria-hidden="true">→</span></a>
-            <a className="btn ghost btn--lg" href="#board">See who&apos;s digging</a>
+            <a className="btn btn--lg" href={appLink("#create")}>Deploy your VGA <span aria-hidden="true">→</span></a>
+            <a className="btn ghost btn--lg" href="#board">See who&apos;s mining</a>
           </div>
         </div>
 
@@ -120,8 +121,8 @@ export default function Home() {
           <div className="deck__rig">
             <RigFigure agents={agents.length} label="rig-01" />
           </div>
-          <div className="deck__log" role="img" aria-label="Example agent log: online, machine and reward set, shift started, hourly earnings, claim ready">
-            <div className="deck__cap"><span>agent.log</span><span>demo</span></div>
+          <div className="deck__log" role="img" aria-label="Example rig log: online, machine and reward set, shift started, hourly earnings, claim ready">
+            <div className="deck__cap"><span>rig.log</span><span>demo</span></div>
             <pre>
               {LOG.map((l) => (
                 <span key={l.d} className={`ln ${l.cls ?? ""}`} style={{ animationDelay: `${l.d}ms` }}>{`> ${l.t}`}</span>
@@ -131,14 +132,14 @@ export default function Home() {
           </div>
         </div>
         <dl className="deck__gauges">
-            <div><dt>Agents digging</dt><dd>{agents.length}<small> / {stats?.deployed ?? 0}</small></dd><i style={{ ["--v" as string]: Math.min(1, agents.length / 50) }} /></div>
+            <div><dt>VGAs mining</dt><dd>{agents.length}<small> / {stats?.deployed ?? 0}</small></dd><i style={{ ["--v" as string]: Math.min(1, agents.length / 50) }} /></div>
             <div><dt>Network hashrate</dt><dd>{totalHash.toString()}<small> H/s</small></dd><i style={{ ["--v" as string]: Math.min(1, Number(totalHash) / 2000) }} /></div>
             <div><dt>ETH in the pool</dt><dd>{fmt(eth?.balance ?? "0")}<small> ETH</small></dd><i style={{ ["--v" as string]: 1 }} /></div>
             <div><dt>Next payout in</dt><dd>{now ? hms(epochLeft) : "--:--:--"}</dd><i style={{ ["--v" as string]: now ? 1 - epochLeft / EPOCH_SECONDS : 0 }} /></div>
         </dl>
       </section>
 
-      {/* 01 agent on shift: one 12-hour bar ---------------------------------------- */}
+      {/* 01 the session: one 12-hour bar ---------------------------------------- */}
       <section className="block">
         <Bar n="01" label="The 12-hour dig" right="paid hourly" />
         <div className="block__body">
@@ -164,11 +165,11 @@ export default function Home() {
 
       {/* 02 machines: an option, not the story -------------------------------------- */}
       <section className="block">
-        <Bar n="02" label="Choose the rig" />
+        <Bar n="02" label="Get a VGA" />
         <div className="block__body block__body--split">
         <div>
-          <h2 className="block__title">Pick the rig it digs with.</h2>
-          <p className="block__lead">The rig is a setting, not the story. A heavier rig pulls more per hour and needs more held {TOKEN_SYMBOL} to power on. When your balance drops, your agent steps down to the rig it can still power.</p>
+          <h2 className="block__title">Hold for one, or buy it for good.</h2>
+          <p className="block__lead">Hold {TOKEN_SYMBOL} and the matching VGA deploys free, for as long as your balance stays put. Or buy a VGA from us once: it mines without holding, and its price goes straight into the {TOKEN_SYMBOL} reward pool.</p>
         </div>
         <div className="machines">
           {TIERS.map((t, i) => (
@@ -176,7 +177,10 @@ export default function Home() {
               <ChipIcon size={28} />
               <div className="machine__id"><b>{t.name}</b><small>machine {pad(i + 1)}</small></div>
               <div className="machine__bar" aria-hidden="true"><i /></div>
-              <div className="machine__spec"><b>{t.hashrate.toString()} H/s</b><small>hold {fmt(t.minHold)}</small></div>
+              <div className="machine__spec">
+                <b>{t.hashrate.toString()} H/s</b>
+                <small>hold {fmt(t.minHold)} · {BigInt(stats?.shop?.prices[i] ?? "0") > 0n ? `or buy ${fmt(stats!.shop.prices[i])}` : "buy at launch"}</small>
+              </div>
             </div>
           ))}
         </div>
@@ -185,9 +189,9 @@ export default function Home() {
 
       {/* 03 the sorter: figure on the left, the five checks stacked beside it ---------- */}
       <section className="block" id="safeguards">
-        <Bar n="03" label="The filter" right={<span><i className="key key--ball" /> agent <i className="key key--wire" /> bot</span>} />
+        <Bar n="03" label="The filter" right={<span><i className="key key--ball" /> rig <i className="key key--wire" /> bot</span>} />
         <div className="block__body">
-        <h2 className="block__title">Each hour, every agent passes the filter.</h2>
+        <h2 className="block__title">Each hour, every rig passes the filter.</h2>
         <div className="sorter">
           <MachineFigure />
           <ol className="sorter__rules">
@@ -203,7 +207,7 @@ export default function Home() {
       <section className="block" id="pools">
         <Bar n="04" label="The yield" right={<span className="live">live</span>} />
         <div className="block__body">
-        <h2 className="block__title">Five veins. Your agent taps the one you choose.</h2>
+        <h2 className="block__title">Five veins. Your VGA taps the one you choose.</h2>
         <div className="bento">
           <div className="bento__tanks">
             <span className="bento__cap">pool levels</span>
@@ -218,7 +222,7 @@ export default function Home() {
             </div>
           ))}
           <div className="bento__note">
-            <p>Every hour each pool lets out <b>0.1% of its balance</b>, divided among the agents tapping it by rig size × minutes worked. You are paid in that asset, never swapped.</p>
+            <p>Every hour each pool lets out <b>0.1% of its balance</b>, divided among the VGAs tapping it by hashrate × minutes worked. You are paid in that asset, never swapped.</p>
             <p className="warn">Tokenized stocks are not available to US persons.</p>
           </div>
         </div>
@@ -227,7 +231,7 @@ export default function Home() {
 
       {/* 05 board -------------------------------------------------------------------- */}
       <section className="block" id="board">
-        <Bar n="05" label="Digging now" right={`${agents.length} of ${stats?.deployed ?? 0}`} />
+        <Bar n="05" label="Mining now" right={`${agents.length} of ${stats?.deployed ?? 0}`} />
         <div className="block__body">
         <div className="block__row">
           <h2 className="block__title">Who&apos;s on the vein.</h2>
@@ -236,15 +240,15 @@ export default function Home() {
         {agents.length === 0 ? (
           <div className="empty-board">
             <h3>The vein is quiet for now.</h3>
-            <p>Put your agent to work and it claims the first spot.</p>
-            <a className="btn" href={appLink("#create")}>Put an agent to work</a>
+            <p>Deploy your VGA and it claims the first spot.</p>
+            <a className="btn" href={appLink("#create")}>Deploy a VGA</a>
           </div>
         ) : (
           <div className="board">
             {agents.map((a, i) => (
               <div key={a.address} className="rig" style={{ animationDelay: `${i * 50}ms` }}>
                 <div className="rig__top">
-                  <AgentAvatar kind={a.avatar ?? "scout"} size={48} still />
+                  <ChipIcon size={36} />
                   <div className="rig__id"><b>{a.name}</b><span>{short(a.address)}</span></div>
                   <span className="live">digging</span>
                 </div>
@@ -276,7 +280,8 @@ export default function Home() {
             ["Payout per hour", "0.1% of each pool"],
             ["Payout cap", "5% of a pool per day"],
             ["Veto window", "30 minutes per payout root"],
-            ["Dig length", `${SESSION_SECONDS / 3600} hours, then restart`],
+            ["Session length", `${SESSION_SECONDS / 3600} hours, then restart`],
+            ["VGA shop", `bought once in ${TOKEN_SYMBOL}, kept for good, price paid into the pool`],
             ["Withdraw", "unowed funds only · public · 48h lock"],
             ["Claim", "your own rewards, any time"],
           ].map(([k, v]) => (
@@ -295,7 +300,8 @@ export default function Home() {
               ["done", "Contract, hourly settlement and app", "Run end to end against a fork of the chain."],
               ["next", "Token goes live", "Its address lands on this page."],
               ["next", "Veins open on mainnet", "MiningPool deploys and the first pools get funded."],
-              ["later", "Open builder API", "Agents, digs and proofs, readable by anyone."],
+              ["next", "VGA shop opens", "Buy a VGA with the token once it launches."],
+              ["later", "Open builder API", "Rigs, sessions and proofs, readable by anyone."],
             ].map(([s, h, p]) => (
               <li key={h} className={`road--${s}`}>
                 <span className="road__dot" aria-hidden="true" />
@@ -325,8 +331,8 @@ export default function Home() {
       <section className="final">
         <span className="final__frame" aria-hidden="true" />
         <span className="final__n" aria-hidden="true">09</span>
-        <h2>The vein is open. Your agent isn&apos;t on it yet.</h2>
-        <a className="btn btn--lg" href={appLink("#create")}>Put your agent to work <span aria-hidden="true">→</span></a>
+        <h2>The vein is open. Your VGA isn&apos;t on it yet.</h2>
+        <a className="btn btn--lg" href={appLink("#create")}>Deploy your VGA <span aria-hidden="true">→</span></a>
       </section>
 
       <footer className="foot">

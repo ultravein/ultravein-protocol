@@ -31,6 +31,11 @@ export const poolAbi = parseAbi([
   "function claimedBy(address account, address asset) view returns (uint256)",
   "function publish(bytes32 newRoot, address[] assets, uint256[] newCommitted)",
   "function claim(address asset, uint256 cumulative, bytes32[] proof)",
+  "function cardToken() view returns (address)",
+  "function cardPrice(uint8 tier) view returns (uint256)",
+  "function cardOf(address account) view returns (uint8)",
+  "function cardSpent(address account) view returns (uint256)",
+  "function buyCard(uint8 tier)",
   "error OverCap(address asset)",
   "error PendingExists()",
   "error BadProof()",
@@ -72,6 +77,20 @@ export const poolBalance = async (asset: Address, blockNumber?: bigint): Promise
     : tokenBalance(asset, POOL_ADDRESS, blockNumber);
 
 export const poolRead = publicClient.readContract.bind(publicClient);
+
+/** 1-based tier of the VGA `account` bought, 0 if none or the pool is not deployed yet. */
+export const ownedTier = async (account: Address): Promise<number> =>
+  POOL_ADDRESS === zeroAddress ? 0 : Number(await poolRead({ address: POOL_ADDRESS, abi: poolAbi, functionName: "cardOf", args: [account] }));
+
+/** The shop as the contract has it: payment token and per-tier price (0 = not for sale). */
+export async function shop(tiers: number) {
+  if (POOL_ADDRESS === zeroAddress) return { token: zeroAddress as Address, prices: Array<bigint>(tiers).fill(0n) };
+  const [token, ...prices] = await Promise.all([
+    poolRead({ address: POOL_ADDRESS, abi: poolAbi, functionName: "cardToken" }),
+    ...Array.from({ length: tiers }, (_, i) => poolRead({ address: POOL_ADDRESS, abi: poolAbi, functionName: "cardPrice", args: [i + 1] })),
+  ]);
+  return { token: token as Address, prices: prices as bigint[] };
+}
 
 export const blockTime = async (n: bigint) => Number((await publicClient.getBlock({ blockNumber: n })).timestamp);
 

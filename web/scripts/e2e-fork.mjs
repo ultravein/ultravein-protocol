@@ -40,8 +40,8 @@ await send(await as(funder).writeContract({ address: pool, abi: poolAbi, functio
 // 2. deploy agent and start a session with signed messages
 const addr = miner.address.toLowerCase();
 let ts = Math.floor(Date.now() / 1000);
-const agentMsg = msg(["ultravein agent", `address: ${addr}`, "name: Fork Rig", "tier: rtx4090", `asset: ${zeroAddress}`, "avatar: rigger", `ts: ${ts}`]);
-const agentBody = { address: addr, name: "Fork Rig", tier: "rtx4090", asset: zeroAddress, avatar: "rigger", ts };
+const agentMsg = msg(["ultravein rig", `address: ${addr}`, "name: Fork Rig", "tier: rtx4090", `asset: ${zeroAddress}`, `ts: ${ts}`]);
+const agentBody = { address: addr, name: "Fork Rig", tier: "rtx4090", asset: zeroAddress, ts };
 let r = await post("/api/agent", { ...agentBody, signature: await miner.signMessage({ message: agentMsg }) });
 ok(r.status === 200, `agent created (${JSON.stringify(r.body)})`);
 r = await post("/api/agent", { ...agentBody, signature: await miner.signMessage({ message: agentMsg }) });

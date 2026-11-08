@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { zeroAddress } from "viem";
 import {
   ASSETS,
-  AVATARS,
   CHALLENGE_DELAY,
   EMISSION_PPM,
   EPOCH_SECONDS,
@@ -82,17 +81,17 @@ const CHAPTERS: Chapter[] = [
     id: "overview",
     title: "The short version",
     summary: "Ultravein on one page.",
-    keys: "intro what agent mining pool robinhood",
+    keys: "intro what vga mining pool robinhood",
     body: (
       <>
-        <p className="mlead">Ultravein gives every holder <b>an agent that works the vein</b>. Assign it, clock it in for {SESSION_H} hours, and for every hour it holds your spot it draws a share of the pool you chose: ETH, {TOKEN_SYMBOL}, or a tokenized stock.</p>
-        <p>No hardware involved. Your agent digs with a <b>rig</b> (the app calls it a machine), which is only a setting. Heavier rigs pull faster and need more held {TOKEN_SYMBOL} to power on.</p>
+        <p className="mlead">Ultravein lets every holder <b>put a VGA on the vein</b>. Deploy one free with what you hold, or buy one from us for good, then run it in {SESSION_H}-hour sessions. Every hour it stays powered it draws a share of the pool you chose: ETH, {TOKEN_SYMBOL}, or a tokenized stock.</p>
+        <p>No hardware involved: every VGA is virtual. Bigger VGAs mine faster; a held one needs more {TOKEN_SYMBOL} to power on, a bought one needs none.</p>
         <Table
           head={["Part", "What it is"]}
           rows={[
-            ["Agent", "Your miner. One per wallet, with a name and a character."],
+            ["Rig", "Your miner. One per wallet, with a name, a VGA and a reward vein."],
             ["Shift", `A ${SESSION_H}-hour run. Start it with a signature, restart it when it ends.`],
-            ["Machine", "The speed your agent runs at, unlocked by your held balance."],
+            ["VGA", "The card your rig runs, held (unlocked by balance) or bought (yours for good)."],
             ["Pool", "One bucket per reward asset, funded by the project."],
             ["Epoch", `${EPOCH_SECONDS / 60} minutes. Rewards are measured and settled per epoch.`],
             ["MiningPool", "The one contract that holds every pool and pays claims."],
@@ -112,8 +111,8 @@ const CHAPTERS: Chapter[] = [
         <ol className="msteps">
           <li><b>Hold {TOKEN_SYMBOL}.</b> At least {fmt(TIERS[0].minHold)} for the smallest machine.</li>
           <li><b>Connect your wallet</b> from the header. The site never sends anything without your confirmation.</li>
-          <li><b>Create your agent</b> in the dashboard: pick a character, a name, a machine and a reward. Sign once.</li>
-          <li><b>Start a shift</b> from Overview or Machine. Sign once more. Your agent mines for {SESSION_H} hours.</li>
+          <li><b>Deploy a VGA</b> in the dashboard: pick a VGA (or buy one), a name and a reward. Sign once.</li>
+          <li><b>Start a shift</b> from Overview or Machine. Sign once more. Your VGA mines for {SESSION_H} hours.</li>
           <li><b>Claim</b> from Portfolio once a payout root has passed its {VETO_MIN}-minute window.</li>
         </ol>
         <Note kind="warn">Tokenized stocks are not available to US persons.</Note>
@@ -121,28 +120,34 @@ const CHAPTERS: Chapter[] = [
     ),
   },
   {
-    id: "agents",
-    title: "Agents & looks",
-    summary: "One agent per wallet. Looks are cosmetic.",
-    keys: "agent character scout rigger sentinel name avatar",
+    id: "vgas",
+    title: "VGAs & the shop",
+    summary: "Hold for one free, or buy one for good.",
+    keys: "vga gpu card buy shop own hold deploy rig tier price upgrade",
     body: (
       <>
-        <p>Each wallet owns exactly one agent. Saving it again updates it; the change applies from your next shift.</p>
+        <p>Each wallet runs one rig with one VGA. Every VGA is virtual: there is no hardware to plug in. There are two ways to get one.</p>
+        <Table
+          head={["Route", "How it works"]}
+          rows={[
+            ["Deploy (hold)", `Free. Hold ${TOKEN_SYMBOL} and the VGA your balance covers is yours to run, checked every hour against your lowest balance.`],
+            ["Buy (own)", `Pay once in ${TOKEN_SYMBOL} through MiningPool.buyCard. The VGA is yours for good and mines with no holding at all.`],
+          ]}
+        />
+        <ul className="mlist">
+          <li>Upgrading a bought VGA costs only the difference over what this wallet already paid.</li>
+          <li>The whole price lands in the {TOKEN_SYMBOL} reward pool and is paid back out to miners like any refill.</li>
+          <li>Your rig runs the best VGA you can power, owned or held, and never one above the VGA you picked.</li>
+        </ul>
         <Table
           head={["Field", "Rule"]}
           rows={[
             ["Name", "1 to 32 bytes, no leading or trailing spaces, no control characters."],
-            ["Character", AVATARS.map((a) => a.name).join(", ")],
-            ["Machine", "One of the machines in chapter 05."],
+            ["VGA", TIERS.map((t) => t.name).join(", ")],
             ["Reward", ASSETS.map((a) => a.symbol).join(", ")],
           ]}
         />
-        <div className="mgrid3">
-          {AVATARS.map((a) => (
-            <div key={a.id} className="mcard"><b>{a.name}</b><p>{a.line}</p></div>
-          ))}
-        </div>
-        <Note kind="rule">A character never changes what an agent earns. It only changes how the agent looks on the board.</Note>
+        <Note kind="rule">Saving your rig again updates it; the change applies from your next session.</Note>
       </>
     ),
   },
@@ -158,7 +163,7 @@ const CHAPTERS: Chapter[] = [
           <li>A new shift can start only when none is running.</li>
           <li>Starting needs at least {fmt(TIERS[0].minHold)} {TOKEN_SYMBOL} in the wallet at that moment.</li>
           <li>Seconds count: a shift that covers 20 minutes of an epoch earns for 20 minutes of it.</li>
-          <li>An idle agent earns nothing. That is the point: abandoned agents stop drawing from the pool.</li>
+          <li>An idle rig earns nothing. That is the point: abandoned rigs stop drawing from the pool.</li>
         </ul>
       </>
     ),
@@ -172,7 +177,7 @@ const CHAPTERS: Chapter[] = [
       <>
         <Table head={["Slot", "Machine", "Hold at least", "Hashrate", "H/s per 1M held"]} rows={tierRows} />
         <Note kind="rule">Bigger machines never pay less per token than smaller ones (the last column never drops). Splitting one bag across many wallets can therefore never earn more than holding it in one.</Note>
-        <p>The machine your agent actually runs at in an epoch is the <b>largest machine your lowest balance in that epoch covers</b>, and never larger than the one you picked.</p>
+        <p>The VGA your rig actually runs in an epoch is the <b>largest one you bought or your lowest balance in that epoch covers</b>, and never larger than the one you picked.</p>
         <Code lang="example">{`picked      H100  (needs 10,000,000)
 lowest bal  2,300,000 during the hour
 runs as     RTX 4090 · 10 H/s for that hour`}</Code>
@@ -203,16 +208,16 @@ runs as     RTX 4090 · 10 H/s for that hour`}</Code>
     keys: "reward emission formula share pool eth stock nvda aapl msft",
     body: (
       <>
-        <p>There is one pool per reward asset. Your agent mines only the pool you picked, and is paid in that asset. No swap is involved.</p>
+        <p>There is one pool per reward asset. Your VGA mines only the pool you picked, and is paid in that asset. No swap is involved.</p>
         <Code lang="formula">{`released(pool, epoch) = remaining(pool) × ${PCT_PER_HOUR}%
 remaining(pool)        = balance − (allocated − claimed)
 
-weight(agent)          = hashrate(machine) × seconds on shift in the epoch
-share(agent)           = released × weight / Σ weight of agents on this pool`}</Code>
+weight(rig)            = hashrate(VGA) × seconds on session in the epoch
+share(rig)             = released × weight / Σ weight of rigs on this pool`}</Code>
         <p>Every share is rounded down, so a pool never releases more than its {PCT_PER_HOUR}%. A pool with nobody mining it releases nothing that hour.</p>
         <Code lang="worked example">{`ETH pool holds 10 ETH            → releases 0.01 ETH this hour
-agent A: H100 (120 H/s) × 3600 s  → weight 432,000
-agent B: A100 ( 55 H/s) × 1800 s  → weight  99,000
+rig A: H100   (120 H/s) × 3600 s  → weight 432,000
+rig B: A100   ( 55 H/s) × 1800 s  → weight  99,000
 A earns 0.01 × 432,000 / 531,000 = 0.008135 ETH
 B earns 0.01 ×  99,000 / 531,000 = 0.001864 ETH`}</Code>
         <p>Because the release is a share of what is left, a pool never runs dry on its own; refills make the next hours pay more.</p>
@@ -230,7 +235,7 @@ B earns 0.01 ×  99,000 / 531,000 = 0.001864 ETH`}</Code>
         <Table
           head={["Step", "What happens"]}
           rows={[
-            ["Measure", "Holding check, machine, seconds and shares for every agent on shift."],
+            ["Measure", "Holding check, VGA, seconds and shares for every rig on a session."],
             ["Accumulate", "Totals are cumulative per (wallet, asset), so a missed run loses nothing."],
             ["Publish", "The publisher key submits the root and the new total per asset."],
             ["Veto window", `${VETO_MIN} minutes in which the guardian key can discard the root.`],
@@ -300,6 +305,8 @@ B earns 0.01 ×  99,000 / 531,000 = 0.001864 ETH`}</Code>
         />
         <Code lang="solidity">{`function fund(address asset, uint256 amount) payable
 function claim(address asset, uint256 cumulative, bytes32[] proof)
+function buyCard(uint8 tier)                                               // VGA shop, pays the difference
+function setShop(address token, uint256[] prices)                          // owner, prices[i] = tier i+1
 function publish(bytes32 root, address[] assets, uint256[] newCommitted)   // publisher
 function veto()                                                            // guardian
 function promote()                                                         // anyone
@@ -308,10 +315,12 @@ function executeWithdraw(uint256 id) / cancelWithdraw(uint256 id)          // ow
 function setAsset(address asset, bool allowed) / setRoles(owner, publisher, guardian)
 
 view root() · pendingRoot() · committed(asset) · claimed(asset)
-     claimedBy(account, asset) · unallocated(asset) · allowed(asset)`}</Code>
+     claimedBy(account, asset) · unallocated(asset) · allowed(asset)
+     cardToken() · cardPrice(tier) · cardOf(account) · cardSpent(account)`}</Code>
         <Code lang="events / errors">{`event Funded(from, asset, amount)       event Claimed(account, asset, amount)
 event Published(root, assets, totals)  event Promoted(root)   event Vetoed(root)
 event WithdrawProposed(id, asset, amount, to, readyAt)  WithdrawCancelled  WithdrawExecuted
+event ShopSet(token, prices)           event CardBought(buyer, tier, paid)
 
 error OverCap(asset)  BadProof  NothingToClaim  OverCommitted  PendingExists
       NotAllowed  BadInput  NothingToVeto  NotReady  OverUnallocated  Unauthorized`}</Code>
@@ -323,18 +332,18 @@ error OverCap(asset)  BadProof  NothingToClaim  OverCommitted  PendingExists
     id: "api",
     title: "API reference",
     summary: "Each public endpoint and what it returns.",
-    keys: "api endpoint json rest stats me proof history network agent session",
+    keys: "api endpoint json rest stats me proof history network rig session",
     body: (
       <>
         <Table
           head={["Method", "Path", "Returns"]}
           rows={[
-            ["GET", <code key="1">/api/stats</code>, "deployed, pools[], agents[] on shift"],
-            ["GET", <code key="2">/api/network</code>, "net[]: per epoch agents, hashrate, pools, emitted"],
-            ["GET", <code key="3">/api/me?address=</code>, "agent, session, balance, effectiveTier, perHour, earned, wallet"],
+            ["GET", <code key="1">/api/stats</code>, "deployed, shop{token, prices[]}, pools[], agents[] (rigs on a session)"],
+            ["GET", <code key="2">/api/network</code>, "net[]: per epoch rigs, hashrate, pools, emitted"],
+            ["GET", <code key="3">/api/me?address=</code>, "agent (your rig), session, balance, effectiveTier, owned, perHour, earned, wallet"],
             ["GET", <code key="4">/api/history?address=</code>, "hist[] per epoch, act[] activity log"],
             ["GET", <code key="5">/api/proof?address=&asset=</code>, "cumulative, claimable, proof[]"],
-            ["POST", <code key="6">/api/agent</code>, "create or update your agent (signed)"],
+            ["POST", <code key="6">/api/agent</code>, "deploy or update your rig (signed)"],
             ["POST", <code key="7">/api/session</code>, "start a shift (signed)"],
           ]}
         />
@@ -355,12 +364,11 @@ error OverCap(asset)  BadProof  NothingToClaim  OverCommitted  PendingExists
     body: (
       <>
         <p>Both actions are plain personal-sign messages. Every field is inside the text, so none can be swapped after signing.</p>
-        <Code lang="agent">{`ultravein agent
+        <Code lang="rig">{`ultravein rig
 address: 0xyouraddress
 name: nightshift
 tier: h100
 asset: 0x0000000000000000000000000000000000000000
-avatar: sentinel
 ts: 1791395618`}</Code>
         <Code lang="session">{`ultravein session
 address: 0xyouraddress
@@ -378,13 +386,13 @@ ts: 1791395619`}</Code>
       <Table
         head={["Tab", "Use it to"]}
         rows={[
-          ["Overview", "See your agent, balance, machine, estimated rate, earnings chart and shift ring."],
-          ["Create agent", "Pick a character, name, machine and reward. Preview the board card."],
+          ["Overview", "Your VGA in 3D, balance, estimated rate, earnings chart and the 12-hour blocks."],
+          ["Deploy VGA", "Pick or buy a VGA, name your rig, choose a reward. Preview the board card."],
           ["Machine", "Start a shift, watch progress, see which gate checks pass."],
           ["Activity", "Minutes mined per hour, a timeline and a table of every epoch."],
           ["Portfolio", "Wallet balances, earned, claimed, claimable and claim buttons per asset."],
           ["Pools", "Pool levels, buckets, your share, network hashrate and pool history."],
-          ["Leaderboard", "Every agent on shift, strongest machine first."],
+          ["Leaderboard", "Every rig on a session, strongest VGA first."],
         ]}
       />
     ),
@@ -398,10 +406,10 @@ ts: 1791395619`}</Code>
       <div className="mfaq">
         {[
           ["Do I need a GPU?", "No. The machine is a setting; your held balance unlocks it."],
-          ["Can I run two agents?", "One wallet runs one agent. More wallets never beat one bag, by design."],
+          ["Can I run two VGAs?", "One wallet runs one rig. More wallets never beat one bag, by design."],
           ["Why is claimable lower than earned?", `Claimable follows the active root, which trails by up to one settlement plus ${VETO_MIN} minutes.`],
           ["What if the hourly job stops?", `Nothing is lost. Totals are cumulative and up to ${MAX_EPOCHS_PER_RUN} epochs catch up per run.`],
-          ["Is the APR fixed?", "No rate is promised. It depends on pool size, refills and how many agents mine it."],
+          ["Is the APR fixed?", "No rate is promised. It depends on pool size, refills and how many VGAs mine it."],
           ["What happens to idle pools?", "A pool nobody mines releases nothing and keeps its balance."],
         ].map(([q, a]) => (
           <details key={q}><summary>{q}</summary><p>{a}</p></details>
@@ -417,9 +425,9 @@ ts: 1791395619`}</Code>
     body: (
       <dl className="mgloss">
         {[
-          ["Agent", "Your miner; one per wallet."],
+          ["Rig", "Your miner; one per wallet."],
           ["Shift", `A ${SESSION_H}-hour mining session.`],
-          ["Machine", "The hashrate tier your agent runs at."],
+          ["VGA", "The hashrate tier your rig runs, held or bought."],
           ["Epoch", `A ${EPOCH_SECONDS / 60}-minute window; rewards are measured per epoch.`],
           ["Weight", "Hashrate × seconds on shift within an epoch."],
           ["Root", "Merkle root of every wallet's cumulative rewards."],
@@ -464,7 +472,7 @@ export default function Docs() {
       <header className="manual__cover">
         <span className="manual__stamp">FIELD MANUAL · {REV}</span>
         <h1>Inside Ultravein, from rig to payout.</h1>
-        <p>How an agent taps a vein, how rigs and holdings set its rate, how each hour is settled, and the exact contract, API and signed messages underneath.</p>
+        <p>How a VGA taps a vein, how holding or buying sets its rate, how each hour is settled, and the exact contract, API and signed messages underneath.</p>
         <label className="manual__search">
           <span aria-hidden="true">/</span>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter chapters: claim, machine, api…" aria-label="Filter chapters" />
@@ -488,7 +496,7 @@ export default function Docs() {
               );
             })}
           </ol>
-          <a className="btn btn--block" href={appLink("#create")}>Deploy your agent <span aria-hidden="true">→</span></a>
+          <a className="btn btn--block" href={appLink("#create")}>Deploy your VGA <span aria-hidden="true">→</span></a>
         </nav>
 
         <div className="manual__pages">

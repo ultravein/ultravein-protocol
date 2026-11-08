@@ -497,19 +497,16 @@ input { background: var(--bg); color: var(--text); border: 1px solid var(--line-
 .gpu em { position: absolute; top: 10px; right: 10px; font-style: normal; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .gpu.is-on { border-color: var(--bright); box-shadow: inset 0 0 0 1px var(--bright), 0 0 30px -14px #141018; }
 .gpu.is-locked { opacity: 0.45; cursor: not-allowed; }
+/* shop card: the pick area is a button, the buy/owned line sits under it */
+.gpu { cursor: default; align-content: start; }
+.gpu__pick { display: grid; gap: 4px; justify-items: start; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.gpu em.gpu__tag { position: static; margin-top: 8px; }
+.gpu em.gpu__tag.is-owned { color: var(--violet); }
+.gpu__buy { margin-top: 8px; width: 100%; justify-content: center; }
+.btn--sm { padding: 7px 10px; font-size: 12px; }
 .chip--btn { cursor: pointer; font: inherit; font-size: 12px; letter-spacing: 0.12em; padding: 8px 14px; }
 .chip--btn.is-on { background: var(--metal-lit); color: #ffffff; border-color: #140f1c40; font-weight: 600; }
 .rig--preview { clip-path: none; }
-.avatar { display: block; flex: none; overflow: visible; }
-.chars { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
-.char { display: grid; justify-items: center; gap: 6px; text-align: center; font: inherit; color: var(--text); cursor: pointer; border: 1px solid var(--line-2); background: radial-gradient(ellipse at 50% 35%, #f3f0fa, #ffffff 70%); padding: 12px 12px 16px; transition: border-color 160ms ease, transform 160ms var(--ease-out); }
-.char:active { transform: scale(0.98); }
-.char b { color: var(--bright); font-size: 16px; letter-spacing: 0.02em; }
-.char small { color: var(--muted); font-size: 12px; line-height: 1.5; max-width: 22ch; }
-.char .avatar { opacity: 0.55; transition: opacity 200ms ease; }
-.char.is-on { border-color: var(--bright); box-shadow: inset 0 0 0 1px var(--bright), 0 0 36px -16px #141018; }
-.char.is-on .avatar { opacity: 1; }
-@media (hover: hover) and (pointer: fine) { .char:hover .avatar { opacity: 0.9; } }
 .agent-stage { position: relative; display: grid; justify-items: center; gap: 16px; padding: 8px 0 4px; overflow: hidden; background: repeating-linear-gradient(0deg, #7c3aed08 0 1px, transparent 1px 6px), radial-gradient(ellipse at 50% 38%, #f3f0fa, transparent 65%); }
 /* hologram scan: a violet line sweeps down over a live agent */
 .agent-stage.is-live::after { content: ""; position: absolute; left: 10%; right: 10%; top: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--violet), transparent); box-shadow: 0 0 12px #7c3aed99; animation: holo-scan 2.8s linear infinite; pointer-events: none; }

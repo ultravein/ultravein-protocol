@@ -249,4 +249,73 @@ contract MiningPoolTest is Test {
         assertLe(pool.claimed(ETH), pool.committed(ETH));
         assertLe(alice.balance + bob.balance, cmt);
     }
+
+    // --- VGA shop ------------------------------------------------------------
+
+    function _openShop() internal {
+        uint256[] memory prices = new uint256[](4);
+        prices[0] = 10 ether;
+        prices[1] = 50 ether;
+        prices[2] = 0; // tier 3 off sale
+        prices[3] = 200 ether;
+        vm.prank(owner);
+        pool.setShop(address(token), prices);
+        token.mint(alice, 1000 ether);
+        vm.prank(alice);
+        token.approve(address(pool), type(uint256).max);
+    }
+
+    function test_buyCardPaysIntoThePool() public {
+        _openShop();
+        uint256 before = pool.unallocated(address(token));
+        vm.prank(alice);
+        pool.buyCard(1);
+        assertEq(pool.cardOf(alice), 1);
+        assertEq(pool.unallocated(address(token)), before + 10 ether);
+        assertEq(token.balanceOf(alice), 990 ether);
+    }
+
+    function test_upgradePaysOnlyTheDifference() public {
+        _openShop();
+        vm.startPrank(alice);
+        pool.buyCard(1);
+        pool.buyCard(4);
+        vm.stopPrank();
+        assertEq(pool.cardOf(alice), 4);
+        assertEq(pool.cardSpent(alice), 200 ether);
+        assertEq(token.balanceOf(alice), 800 ether);
+    }
+
+    function test_buyCardRejectsSameOrLowerTier() public {
+        _openShop();
+        vm.startPrank(alice);
+        pool.buyCard(2);
+        vm.expectRevert(MiningPool.BadInput.selector);
+        pool.buyCard(2);
+        vm.expectRevert(MiningPool.BadInput.selector);
+        pool.buyCard(1);
+        vm.stopPrank();
+    }
+
+    function test_buyCardRejectsUnpricedTier() public {
+        _openShop();
+        vm.prank(alice);
+        vm.expectRevert(MiningPool.BadInput.selector);
+        pool.buyCard(3);
+    }
+
+    function test_buyCardNeedsAListedToken() public {
+        _openShop();
+        vm.prank(owner);
+        pool.setAsset(address(token), false);
+        vm.prank(alice);
+        vm.expectRevert(MiningPool.NotAllowed.selector);
+        pool.buyCard(1);
+    }
+
+    function test_onlyOwnerSetsTheShop() public {
+        uint256[] memory prices = new uint256[](1);
+        vm.expectRevert(MiningPool.Unauthorized.selector);
+        pool.setShop(address(token), prices);
+    }
 }

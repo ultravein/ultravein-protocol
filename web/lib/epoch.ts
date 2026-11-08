@@ -1,7 +1,7 @@
 import { zeroHash, type Address } from "viem";
 import { ASSETS, CHALLENGE_DELAY, EPOCH_SECONDS, MAX_EPOCHS_PER_RUN, POOL_ADDRESS, TOKEN_ADDRESS, tierById } from "./config";
 import { blockAtOrBefore } from "./blocks";
-import { blockTime, getTransfers, poolAbi, poolBalance, poolRead, publicClient, publisherClient, tokenBalance } from "./chain";
+import { blockTime, getTransfers, ownedTier, poolAbi, poolBalance, poolRead, publicClient, publisherClient, tokenBalance } from "./chain";
 import {
   getAcc,
   getEpochState,
@@ -56,7 +56,11 @@ export async function runEpochs({ dry }: { dry: boolean }) {
 
     const transfers = await getTransfers(TOKEN_ADDRESS, bounds[0] + 1n, H);
     const balances = new Map<string, bigint>();
-    for (const [a] of sessions) balances.set(a, await tokenBalance(TOKEN_ADDRESS, a as Address, H));
+    const owned = new Map<string, number>(); // bought VGAs are permanent, so the head is enough
+    for (const [a] of sessions) {
+      balances.set(a, await tokenBalance(TOKEN_ADDRESS, a as Address, H));
+      owned.set(a, await ownedTier(a as Address));
+    }
 
     // remaining = pool balance - (everything we allocated - what was already claimed)
     const totals = totalsByAsset(acc);
@@ -79,7 +83,7 @@ export async function runEpochs({ dry }: { dry: boolean }) {
         const chosen = tierById(s.tier);
         if (!secs || !chosen) continue;
         const low = minBalance(account, balances.get(account) ?? 0n, transfers, bounds[i] + 1n, bounds[i + 1]);
-        const tier = effectiveTier(chosen, low);
+        const tier = effectiveTier(chosen, low, owned.get(account) ?? 0);
         seen.push({ account, asset: s.asset, tier: tier?.id ?? null, secs });
         if (!tier) continue;
         miners.push({ account, asset: s.asset, weight: tier.hashrate * BigInt(secs) });

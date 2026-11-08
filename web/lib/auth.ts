@@ -1,5 +1,5 @@
 export type SignedAction =
-  | { action: "agent"; address: string; name: string; tier: string; asset: string; avatar: string; ts: number }
+  | { action: "rig"; address: string; name: string; tier: string; asset: string; ts: number }
   | { action: "session"; address: string; ts: number };
 
 export const MAX_SKEW_SECONDS = 300;
@@ -7,7 +7,7 @@ export const MAX_SKEW_SECONDS = 300;
 /** The exact text a wallet signs. Every field is in it, so none can be swapped after signing. */
 export function messageFor(a: SignedAction): string {
   const lines = [`ultravein ${a.action}`, `address: ${a.address.toLowerCase()}`];
-  if (a.action === "agent") lines.push(`name: ${a.name}`, `tier: ${a.tier}`, `asset: ${a.asset}`, `avatar: ${a.avatar}`);
+  if (a.action === "rig") lines.push(`name: ${a.name}`, `tier: ${a.tier}`, `asset: ${a.asset}`);
   lines.push(`ts: ${a.ts}`);
   return lines.join("\n");
 }

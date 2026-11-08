@@ -183,7 +183,7 @@ function Fan({ c, r, spin, m = TOP_M }: { c: V; r: number; spin: number | null; 
 }
 
 /** An open-air mining frame: three GPU cards standing upright on risers between two posts, each
- *  with a fan on its side. Fans spin faster as more agents mine; a scan plane sweeps the rack. */
+ *  with a fan on its side. Fans spin faster as more VGAs mine; a scan plane sweeps the rack. */
 export function RigFigure({ agents, idle, label = "ultravein-01" }: { agents: number; idle?: boolean; label?: string }) {
   const motion = useMotion() && !idle;
   const spin = motion ? Math.max(0.5, 3.2 - agents * 0.25) : null;
@@ -196,7 +196,7 @@ export function RigFigure({ agents, idle, label = "ultravein-01" }: { agents: nu
   const ledA = xy([6, D, 4]);
   const ledB = xy([L - 6, D, 4]);
   return (
-    <svg viewBox="-240 -112 310 244" className="fig-svg" role="img" aria-label={`An open mining frame with three upright graphics cards. ${agents} agents mining.`}>
+    <svg viewBox="-240 -112 310 244" className="fig-svg" role="img" aria-label={`An open mining frame with three upright graphics cards. ${agents} VGAs mining.`}>
       <ellipse cx="-90" cy="40" rx="190" ry="100" fill="url(#g-glow)" />
       <g stroke="#4c1d95" strokeOpacity=".09">
         {grid.map(([a, b], i) => {
@@ -270,10 +270,10 @@ function Roller({ c, r, motion }: { c: V; r: number; motion: boolean }) {
 
 const STATIONS = [30, 90, 150, 210, 270];
 const BELT: [number, number] = [-10, 330]; // x span of the belt top
-// item kinds in loop order: -1 = agent (passes), n = bot rejected at station n
+// item kinds in loop order: -1 = rig (passes), n = bot rejected at station n
 const BATCH = [-1, 1, -1, 3, -1, 0, -1, 4];
 
-/** Agents ride the belt through five inspection stations into PASSED; bots are kicked off into REJECTED. */
+/** Rigs ride the belt through five inspection stations into PASSED; bots are kicked off into REJECTED. */
 export function MachineFigure() {
   const motion = useMotion();
   const DUR = 8;
@@ -284,7 +284,7 @@ export function MachineFigure() {
   for (let j = -10; j <= 110; j += 20) grid.push([[-40, j, 0], [380, j, 0]] as [V, V]);
 
   return (
-    <svg viewBox="-358 -84 436 270" className="fig-svg" role="img" aria-label="A sorting machine: agents ride a conveyor through five inspection stations into PASSED; bots are kicked off into REJECTED.">
+    <svg viewBox="-358 -84 436 270" className="fig-svg" role="img" aria-label="A sorting machine: rigs ride a conveyor through five inspection stations into PASSED; bots are kicked off into REJECTED.">
       <ellipse cx="-140" cy="50" rx="230" ry="110" fill="url(#g-glow)" />
       <g stroke="#4c1d95" strokeOpacity=".08">
         {grid.map(([a, b], i) => {
@@ -458,185 +458,6 @@ export function TanksFigure({ pools }: { pools: { symbol: string; balance: bigin
         );
       })}
       <text x={X0 + 4 * (W + GAP) + W / 2 + 26} y="326" className="fig-tick" style={{ textAnchor: "start" }}>miners</text>
-    </svg>
-  );
-}
-
-// --- agent characters -------------------------------------------------------------
-
-/** Draws children flat on a box's front face (the plane y = at[1], facing the viewer's left). u runs along x, v runs up. */
-function Front({ at, children }: { at: V; children: React.ReactNode }) {
-  const [X, Y] = xy(at);
-  return <g transform={`matrix(${FRONT_M} ${X} ${Y})`}>{children}</g>;
-}
-
-/** Draws children flat on a box's right face (the plane x = at[0]). u runs along y, v runs up. */
-function Side({ at, children }: { at: V; children: React.ReactNode }) {
-  const [X, Y] = xy(at);
-  return <g transform={`matrix(${SIDE_M} ${X} ${Y})`}>{children}</g>;
-}
-
-const pulse = (motion: boolean, values: string, dur: string, begin = "0s") =>
-  motion ? <animate attributeName="opacity" values={values} dur={dur} begin={begin} repeatCount="indefinite" /> : null;
-
-/** Flat triangle/quad on any plane, from 3D points. */
-const Face = ({ pts, fill, op = 0.88 }: { pts: V[]; fill: string; op?: number }) => (
-  <polygon points={poly(pts)} fill={fill} stroke="#141018" strokeOpacity={op} strokeWidth=".7" strokeLinejoin="round" />
-);
-
-function Scout({ motion }: { motion: boolean }) {
-  // a crystal probe: an octahedron floating over the pad, a slit eye, an orbit ring and a dot riding it
-  const C: V = [15, 15, 46];
-  const T: V = [15, 15, 68], B: V = [15, 15, 26];
-  const E1: V = [32, 15, 46], E2: V = [15, 32, 46], E3: V = [-2, 15, 46], E4: V = [15, -2, 46];
-  const bob = motion ? <animateTransform attributeName="transform" type="translate" values="0 0; 0 -7; 0 0" dur="3.2s" repeatCount="indefinite" /> : null;
-  const [fx, fy] = xy([20, 20, 50]);
-  const [X, Y] = xy(C);
-  return (
-    <>
-      <ellipse cx={xy([15, 15, 0])[0]} cy={xy([15, 15, 0])[1]} rx="16" ry="7" fill="#141018" opacity=".08">
-        {pulse(motion, ".05; .12; .05", "3.2s")}
-      </ellipse>
-      <g>
-        {bob}
-        <Face pts={[B, E2, E3]} fill="#d9cdf6" />
-        <Face pts={[B, E4, E1]} fill="#cbbcf3" />
-        <Face pts={[B, E1, E2]} fill="url(#g-right)" />
-        <Face pts={[T, E2, E3]} fill="url(#g-left)" />
-        <Face pts={[T, E4, E1]} fill="#efe9fc" />
-        <Face pts={[T, E1, E2]} fill="url(#g-top)" />
-        {/* slit eye on the front face */}
-        <polygon points={poly([[17, 21, 52], [23, 15, 52], [23, 15, 49], [17, 21, 49]].map(([x, y, z]) => [x + 2, y + 2, z] as V))} fill="#1e1534" />
-        <circle cx={fx} cy={fy} r="1.6" fill="#ffffff">{pulse(motion, "1; .2; 1", "1.4s")}</circle>
-        <g transform={`matrix(${TOP_M} ${X} ${Y})`}>
-          <circle r="27" fill="none" stroke="#141018" strokeOpacity=".45" strokeWidth=".6" strokeDasharray="2 3" />
-          <g>
-            <circle cx="27" cy="0" r="2.6" fill="#7c3aed" />
-            {motion && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="2.8s" repeatCount="indefinite" />}
-          </g>
-        </g>
-      </g>
-    </>
-  );
-}
-
-function Rigger({ motion }: { motion: boolean }) {
-  // a tracked crawler: two treads, a low hull, a turret with a lamp, a drill arm pointing forward
-  const P: V = [14, 54, 24];
-  const A: V = [10, 40, 20], Bq: V = [18, 40, 20], Cq: V = [18, 40, 28], Dq: V = [10, 40, 28];
-  const lamp = xy([14, 24, 30]);
-  const [mx, my] = xy([20, 12, 32]);
-  return (
-    <>
-      <Box at={[-4, 0, 0]} size={[8, 36, 10]} />
-      <Box at={[4, 2, 6]} size={[20, 32, 12]} />
-      <Box at={[24, 0, 0]} size={[8, 36, 10]} />
-      {/* tread links crawling along the near tread */}
-      <Side at={[32, 0, 0]}>
-        <line x1="2" y1="5" x2="34" y2="5" stroke="#141018" strokeOpacity=".7" strokeWidth="3" strokeDasharray="2 3">
-          {motion && <animate attributeName="stroke-dashoffset" from="0" to="-10" dur="0.5s" repeatCount="indefinite" />}
-        </line>
-      </Side>
-      <Front at={[-4, 36, 0]}>
-        <circle cx="4" cy="5" r="3" fill="#ffffff" stroke="#141018" strokeOpacity=".8" strokeWidth=".6" />
-      </Front>
-      <Front at={[24, 36, 0]}>
-        <circle cx="4" cy="5" r="3" fill="#ffffff" stroke="#141018" strokeOpacity=".8" strokeWidth=".6" />
-      </Front>
-      <Box at={[8, 8, 18]} size={[13, 16, 11]} />
-      <Box at={[12, 24, 22]} size={[4, 16, 4]} />
-      {/* drill: a cone off the arm, its spiral spinning */}
-      <Face pts={[P, Cq, Dq]} fill="url(#g-top)" />
-      <Face pts={[P, Bq, Cq]} fill="url(#g-right)" />
-      {(() => {
-        const [px, py] = xy(P), [cx, cy] = xy([14, 40, 24]);
-        return (
-          <line x1={cx} y1={cy} x2={px} y2={py} stroke="#7c3aed" strokeWidth="1.4" strokeDasharray="2 2">
-            {motion && <animate attributeName="stroke-dashoffset" from="0" to="-8" dur="0.3s" repeatCount="indefinite" />}
-          </line>
-        );
-      })()}
-      <polygon points={poly([A, Bq, Cq, Dq])} fill="none" stroke="#141018" strokeOpacity=".5" strokeWidth=".6" />
-      {/* mast and headlamp */}
-      <line x1={mx} y1={my} x2={mx} y2={my - 18} stroke="#141018" strokeWidth="1" />
-      <circle cx={mx} cy={my - 20} r="2.2" fill="#7c3aed">{pulse(motion, "1; .3; 1", "1.2s")}</circle>
-      <polygon points={`${lamp[0]},${lamp[1]} ${lamp[0] + 40},${lamp[1] + 26} ${lamp[0] + 20},${lamp[1] + 40}`} fill="#7c3aed" opacity=".1">
-        {pulse(motion, ".05; .18; .05", "2.4s")}
-      </polygon>
-      <circle cx={lamp[0]} cy={lamp[1]} r="2.6" fill="#ffffff" stroke="#141018" strokeWidth=".6" />
-    </>
-  );
-}
-
-function Sentinel({ motion }: { motion: boolean }) {
-  // a floating pylon: footing, two segments hovering apart, a glowing core between, a pyramid cap and halo
-  const hover = (dy: number, begin: string) =>
-    motion ? <animateTransform attributeName="transform" type="translate" values={`0 0; 0 ${-dy}; 0 0`} dur="3s" begin={begin} repeatCount="indefinite" /> : null;
-  const apex: V = [15, 15, 92];
-  const [hx, hy] = xy([15, 15, 98]);
-  return (
-    <>
-      <Box at={[4, 4, 0]} size={[22, 22, 8]} />
-      <g>
-        {hover(3, "0s")}
-        <Box at={[7, 7, 14]} size={[16, 16, 24]} />
-        <Front at={[7, 23, 14]}>
-          <rect x="3" y="6" width="10" height="2" fill="#7c3aed" opacity=".6" />
-          <rect x="3" y="11" width="6" height="2" fill="#7c3aed" opacity=".4" />
-        </Front>
-      </g>
-      <g>
-        {hover(5, ".2s")}
-        <Box at={[11, 11, 43]} size={[8, 8, 8]} lit />
-        <circle cx={xy([15, 15, 47])[0]} cy={xy([15, 15, 47])[1]} r="10" fill="#a78bfa" opacity=".18">
-          {pulse(motion, ".08; .3; .08", "1.6s")}
-        </circle>
-      </g>
-      <g>
-        {hover(7, ".4s")}
-        <Box at={[7, 7, 56]} size={[16, 16, 20]} />
-        <Front at={[7, 23, 56]}>
-          <rect x="1" y="9" width="14" height="4" fill="#1e1534" />
-          <rect x="2" y="10" width="3" height="2" fill="#ffffff">
-            {motion && <animate attributeName="x" values="2; 11; 2" dur="2.2s" repeatCount="indefinite" />}
-          </rect>
-        </Front>
-        <Face pts={[apex, [23, 7, 76], [23, 23, 76]]} fill="url(#g-right)" />
-        <Face pts={[apex, [23, 23, 76], [7, 23, 76]]} fill="url(#g-left)" />
-        <g transform={`matrix(${TOP_M} ${hx} ${hy})`}>
-          <circle r="9" fill="none" stroke="#7c3aed" strokeWidth="1" strokeDasharray="3 4">
-            {motion && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite" />}
-          </circle>
-        </g>
-      </g>
-    </>
-  );
-}
-const CHARACTERS = { scout: Scout, rigger: Rigger, sentinel: Sentinel } as const;
-
-/** One of the three agent characters, standing on a lit pad. */
-export function AgentAvatar({ kind, size = 120, still }: { kind: string; size?: number; still?: boolean }) {
-  const motion = useMotion() && !still;
-  const C = CHARACTERS[kind as keyof typeof CHARACTERS] ?? Scout;
-  const pad: V[] = [[-12, -12, 0], [42, -12, 0], [42, 42, 0], [-12, 42, 0]];
-  return (
-    <svg viewBox="-58 -94 108 134" width={size} height={size * (134 / 108)} className="avatar" role="img" aria-label={`${kind} agent`}>
-      <ellipse cx="-4" cy="14" rx="56" ry="30" fill="url(#g-glow)" />
-      <polygon points={poly(pad)} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".7" />
-      {/* an orbit ring on the floor, a violet tick riding it */}
-      {(() => {
-        const [X, Y] = xy([15, 15, 0]);
-        return (
-          <g transform={`matrix(${TOP_M} ${X} ${Y})`}>
-            <circle r="36" fill="none" stroke="#141018" strokeOpacity=".3" strokeWidth=".6" strokeDasharray="1.5 3" />
-            <g>
-              <circle cx="36" cy="0" r="2.4" fill="#7c3aed" />
-              {motion && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="6s" repeatCount="indefinite" />}
-            </g>
-          </g>
-        );
-      })()}
-      <C motion={motion} />
     </svg>
   );
 }

@@ -11,7 +11,6 @@ export async function activeMiners(now = Math.floor(Date.now() / 1000)) {
       return {
         address,
         name: agent.name,
-        avatar: agent.avatar ?? "scout",
         tier: session.tier,
         asset: session.asset,
         end: session.end,

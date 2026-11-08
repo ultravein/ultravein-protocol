@@ -25,9 +25,9 @@ await send(await as(funder).writeContract({ address: token, abi: tokenAbi, funct
 await send(await as(funder).writeContract({ address: pool, abi: poolAbi, functionName: "fund", args: [token, parseEther("5000000")] }));
 
 const AGENTS = [
-  { name: "nightshift", tier: "h100", hold: "12000000", asset: zeroAddress, avatar: "sentinel" },
-  { name: "coldstorage", tier: "a100", hold: "6000000", asset: zeroAddress, avatar: "rigger" },
-  { name: "slowburn", tier: "rtx4090", hold: "1500000", asset: token.toLowerCase(), avatar: "scout" },
+  { name: "nightshift", tier: "h100", hold: "12000000", asset: zeroAddress },
+  { name: "coldstorage", tier: "a100", hold: "6000000", asset: zeroAddress },
+  { name: "slowburn", tier: "rtx4090", hold: "1500000", asset: token.toLowerCase() },
 ];
 for (const a of AGENTS) {
   const acct = privateKeyToAccount(generatePrivateKey());
@@ -35,8 +35,8 @@ for (const a of AGENTS) {
   await send(await as(funder).writeContract({ address: token, abi: tokenAbi, functionName: "mint", args: [acct.address, parseEther(a.hold)] }));
   // signatures expire after 5 minutes, so take the timestamp right before signing
   const ts = Math.floor(Date.now() / 1000);
-  const agentMsg = ["ultravein agent", `address: ${addr}`, `name: ${a.name}`, `tier: ${a.tier}`, `asset: ${a.asset}`, `avatar: ${a.avatar}`, `ts: ${ts}`].join("\n");
-  console.log(a.name, await post("/api/agent", { address: addr, name: a.name, tier: a.tier, asset: a.asset, avatar: a.avatar, ts, signature: await acct.signMessage({ message: agentMsg }) }));
+  const agentMsg = ["ultravein rig", `address: ${addr}`, `name: ${a.name}`, `tier: ${a.tier}`, `asset: ${a.asset}`, `ts: ${ts}`].join("\n");
+  console.log(a.name, await post("/api/agent", { address: addr, name: a.name, tier: a.tier, asset: a.asset, ts, signature: await acct.signMessage({ message: agentMsg }) }));
   const t2 = ts + 1;
   const sessMsg = ["ultravein session", `address: ${addr}`, `ts: ${t2}`].join("\n");
   console.log(a.name, (await post("/api/session", { address: addr, ts: t2, signature: await acct.signMessage({ message: sessMsg }) })).ok ? "session ok" : "session failed");

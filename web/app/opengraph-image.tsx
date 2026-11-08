@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Ultravein: your agent, on the vein. Robinhood Chain";
+export const alt = "Ultravein: your VGA, on the vein. Robinhood Chain";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -32,12 +32,12 @@ export default function OpenGraphImage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: 108, fontWeight: 500, letterSpacing: -5, lineHeight: 1 }}>Your agent,</div>
+          <div style={{ fontSize: 108, fontWeight: 500, letterSpacing: -5, lineHeight: 1 }}>Your VGA,</div>
           <div style={{ display: "flex", flexDirection: "column", alignSelf: "flex-start" }}>
             <div style={{ fontSize: 108, fontWeight: 500, letterSpacing: -5, lineHeight: 1.05, color: "#7c3aed" }}>on the vein.</div>
             <div style={{ height: 5, marginTop: 10, background: "linear-gradient(90deg, #5b21b6, #8b5cf6 35%, #c4b5fd 60%, #7c3aed 82%, #5b21b6)", display: "flex" }} />
           </div>
-          <div style={{ fontSize: 30, color: "#2c2736", marginTop: 30, maxWidth: 900 }}>Twelve hours a dig. It pulls ETH or tokenized stocks from the pool every hour.</div>
+          <div style={{ fontSize: 30, color: "#2c2736", marginTop: 30, maxWidth: 900 }}>Deploy one free or buy it for good. It mines ETH or tokenized stocks every hour.</div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>

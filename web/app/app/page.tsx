@@ -1,16 +1,16 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import type { Address } from "viem";
-import { ASSETS, POOL_ADDRESS, type TierId } from "@/lib/config";
+import { erc20Abi, type Address } from "viem";
+import { ASSETS, POOL_ADDRESS, TIERS, type TierId } from "@/lib/config";
 import { messageFor } from "@/lib/auth";
 import { poolAbi, rh } from "@/lib/chain";
 import { useWallet } from "../wallet";
-import { AgentAvatar, SilverDefs } from "../iso";
-import { Activity, CreateAgent, Leaderboard, Machine, Overview, Pools, Portfolio, type Act, type Dash, type Hist, type Me, type Net, type Proof, type Stats } from "./views";
+import { ChipIcon, SilverDefs } from "../iso";
+import { Activity, DeployVga, Leaderboard, Machine, Overview, Pools, Portfolio, type Act, type Dash, type Hist, type Me, type Net, type Proof, type Stats } from "./views";
 
 const TABS = [
   { id: "overview", label: "Overview", View: Overview },
-  { id: "create", label: "Create agent", View: CreateAgent },
+  { id: "create", label: "Deploy VGA", View: DeployVga },
   { id: "machine", label: "Machine", View: Machine },
   { id: "activity", label: "Activity", View: Activity },
   { id: "portfolio", label: "Portfolio", View: Portfolio },
@@ -120,14 +120,30 @@ export default function AppPage() {
     stats,
     busy,
     go,
-    saveAgent: (name: string, tier: TierId, asset: string, avatar: string) =>
+    saveAgent: (name: string, tier: TierId, asset: string) =>
       run(async () => {
         const { address } = await ensure();
-        const a = { action: "agent" as const, address, name, tier, asset, avatar, ts: nowSec() };
+        const a = { action: "rig" as const, address, name, tier, asset, ts: nowSec() };
         await signAndPost("/api/agent", a, messageFor(a));
         await loadMine(address);
-        setMsg("Agent saved.");
+        setMsg("VGA deployed.");
         go("machine");
+      }),
+    // buys a VGA for good: approve the shop token for the price, then buyCard (the contract only
+    // takes the difference over what this wallet already paid, so approving the full price is safe)
+    buyCard: (tier: TierId) =>
+      run(async () => {
+        const c = await ensure();
+        const n = TIERS.findIndex((t) => t.id === tier) + 1;
+        const price = BigInt(stats?.shop.prices[n - 1] ?? "0");
+        const token = stats?.shop.token as Address | undefined;
+        if (!token || price === 0n) throw new Error("This VGA is not for sale yet.");
+        const approve = await c.wallet.writeContract({ account: c.address, chain: rh, address: token, abi: erc20Abi, functionName: "approve", args: [POOL_ADDRESS, price] });
+        await c.wallet.waitForTransactionReceipt({ hash: approve });
+        const hash = await c.wallet.writeContract({ account: c.address, chain: rh, address: POOL_ADDRESS, abi: poolAbi, functionName: "buyCard", args: [n] });
+        await c.wallet.waitForTransactionReceipt({ hash });
+        await loadMine(c.address);
+        setMsg(`${TIERS[n - 1].name} is yours. It mines without holding.`);
       }),
     startSession: () =>
       run(async () => {
@@ -160,13 +176,13 @@ export default function AppPage() {
   return (
     <div className="dash">
       <SilverDefs />
-      {/* command bar: agent status | numbered tabs | wallet, pinned under the site header */}
+      {/* command bar: rig status | numbered tabs | wallet, pinned under the site header */}
       <div className="dash__bar">
         <div className="dash__agent">
-          <AgentAvatar kind={me?.agent?.avatar ?? "scout"} size={40} still />
+          <ChipIcon size={34} dim={!me?.agent} />
           <div>
-            <b>{me?.agent?.name ?? "No agent yet"}</b>
-            <span className={`state ${digging ? "is-on" : ""}`}>{digging ? "digging" : "idle"}</span>
+            <b>{me?.agent?.name ?? "No VGA yet"}</b>
+            <span className={`state ${digging ? "is-on" : ""}`}>{digging ? "mining" : "idle"}</span>
           </div>
         </div>
         <nav className="dash__tabs" aria-label="Dashboard">

@@ -3,7 +3,7 @@ import { createContext, useContext, useState } from "react";
 import type { Address, WalletClient } from "viem";
 import { connectWallet } from "@/lib/wallet";
 
-type Conn = { wallet: WalletClient; address: Address };
+type Conn = Awaited<ReturnType<typeof connectWallet>>;
 const Ctx = createContext<{ conn: Conn | null; connect: () => Promise<Conn> } | null>(null);
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {

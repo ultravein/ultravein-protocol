@@ -48,6 +48,13 @@ contract MiningPool is ReentrancyGuard {
     Pending internal pending;
     Withdrawal[] public withdrawals;
 
+    // VGA shop: cards are bought once, kept forever, and paid in cardToken straight into that
+    // token's reward bucket. Tiers are numbered from 1; cardOf is the highest tier an account owns.
+    address public cardToken;
+    mapping(uint8 tier => uint256) public cardPrice; // 0 = not for sale
+    mapping(address account => uint8) public cardOf;
+    mapping(address account => uint256) public cardSpent; // an upgrade pays only the difference
+
     event Funded(address indexed from, address indexed asset, uint256 amount);
     event Published(bytes32 indexed root, address[] assets, uint256[] newCommitted);
     event Promoted(bytes32 indexed root);
@@ -58,6 +65,8 @@ contract MiningPool is ReentrancyGuard {
     event WithdrawProposed(uint256 indexed id, address indexed asset, uint256 amount, address to, uint64 readyAt);
     event WithdrawCancelled(uint256 indexed id);
     event WithdrawExecuted(uint256 indexed id);
+    event ShopSet(address token, uint256[] prices);
+    event CardBought(address indexed buyer, uint8 tier, uint256 paid);
 
     error Unauthorized();
     error NotAllowed();
@@ -101,6 +110,24 @@ contract MiningPool is ReentrancyGuard {
             IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
         }
         emit Funded(msg.sender, asset, amount);
+    }
+
+    // --- VGA shop ------------------------------------------------------------
+
+    /// Buys `tier` for good. Owning a lower tier already, the buyer pays only the difference.
+    /// The payment lands in cardToken's bucket and is paid back out to miners like any funding.
+    function buyCard(uint8 tier) external nonReentrant {
+        address token = cardToken;
+        require(token != address(0) && allowed[token], NotAllowed());
+        uint256 price = cardPrice[tier];
+        require(price != 0 && tier > cardOf[msg.sender], BadInput());
+        uint256 spent = cardSpent[msg.sender];
+        uint256 due = price > spent ? price - spent : 0;
+        cardOf[msg.sender] = tier;
+        cardSpent[msg.sender] = spent + due;
+        if (due != 0) IERC20(token).safeTransferFrom(msg.sender, address(this), due);
+        emit CardBought(msg.sender, tier, due);
+        emit Funded(msg.sender, token, due);
     }
 
     // --- settlement ----------------------------------------------------------
@@ -160,6 +187,16 @@ contract MiningPool is ReentrancyGuard {
     function setAsset(address asset, bool isAllowed) external onlyOwner {
         allowed[asset] = isAllowed;
         emit AssetSet(asset, isAllowed);
+    }
+
+    /// prices[i] is the price of tier i + 1 in `token`; 0 takes a tier off sale.
+    function setShop(address token, uint256[] calldata prices) external onlyOwner {
+        require(token != ETH && prices.length < 256, BadInput());
+        cardToken = token;
+        for (uint256 i; i < prices.length; i++) {
+            cardPrice[uint8(i + 1)] = prices[i];
+        }
+        emit ShopSet(token, prices);
     }
 
     function setRoles(address owner_, address publisher_, address guardian_) external onlyOwner {
