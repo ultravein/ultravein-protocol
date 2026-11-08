@@ -1,0 +1,15 @@
+contracts/out/
+contracts/cache/
+contracts/lib/
+contracts/broadcast/
+web/node_modules/
+web/.next/
+web/data/
+web/next-env.d.ts
+web/*.tsbuildinfo
+.env
+web/.env.local
+web/AGENTS.md
+web/AGENTS.md
+
+docs/superpowers/
