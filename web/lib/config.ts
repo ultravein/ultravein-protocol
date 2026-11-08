@@ -25,9 +25,9 @@ export const tierById = (id: unknown): Tier | undefined => TIERS.find((t) => t.i
 
 // Agent characters are cosmetic only: they never change what an agent earns.
 export const AVATARS = [
-  { id: "scout", name: "Scout", line: "Hovering drone. Quick eye, never lands." },
-  { id: "rigger", name: "Rigger", line: "Hard-hat miner. Lamp on, shift after shift." },
-  { id: "sentinel", name: "Sentinel", line: "Tall watcher. Scans every hour it holds." },
+  { id: "scout", name: "Scout", line: "Crystal probe. Floats over the vein, reads it first." },
+  { id: "rigger", name: "Rigger", line: "Tracked crawler. Drill down, digs all twelve hours." },
+  { id: "sentinel", name: "Sentinel", line: "Floating pylon. Its core glows while the hour holds." },
 ] as const;
 export type AvatarId = (typeof AVATARS)[number]["id"];
 export const avatarById = (id: unknown) => AVATARS.find((a) => a.id === id);

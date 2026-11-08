@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { formatUnits, zeroAddress } from "viem";
 import { ASSETS, AVATARS, EPOCH_SECONDS, SESSION_SECONDS, TIERS, TOKEN_SYMBOL, type TierId } from "@/lib/config";
 import { fmt } from "@/lib/format";
-import { Chart, Ring, Segmented, type Datum } from "../charts";
-import { AgentAvatar, ChipIcon, MachineFigure, RigFigure, TanksFigure } from "../iso";
+import { Chart, Segmented, type Datum } from "../charts";
+import { AgentAvatar, ChipIcon, HourBlocks, MachineFigure, RigFigure, TanksFigure } from "../iso";
 
 // --- shared types and helpers ------------------------------------------------------
 
@@ -56,8 +56,9 @@ const hms = (s: number) => `${pad(Math.floor(s / 3600))}:${pad(Math.floor((s % 3
 function Head({ kicker, title, children }: { kicker: string; title: string; children?: React.ReactNode }) {
   return (
     <div className="view__head">
-      <div>
-        <p className="kicker"><b>{kicker}</b><span className="kicker__rule" aria-hidden="true" />dashboard</p>
+      <span className="view__n" aria-hidden="true">{kicker}</span>
+      <div className="view__titles">
+        <p className="kicker">dashboard / {title.toLowerCase()}</p>
         <h1 className="view__title">{title}</h1>
       </div>
       {children}
@@ -128,38 +129,36 @@ export function Overview({ d }: { d: Dash }) {
         <Tile i={2} label="Est. per hour" value={running ? fmt(me?.perHour ?? "0") : "—"} sub={running ? symbolOf(running.asset) : "start a session"} />
         <Tile i={3} label="Earned" value={fmt(me?.earned?.[asset] ?? "0")} sub={`${symbolOf(asset)} · ${claimableAssets} claimable`} />
       </div>
-      <div className="dgrid dgrid--2-1">
-        <Panel title={`Earned per hour · ${symbolOf(asset)}`} aside={<span className="label">last 24 epochs</span>}>
-          <Chart data={earnedSeries(d.hist, asset, 24, d.now)} unit={symbolOf(asset)} title={`Earned per hour in ${symbolOf(asset)}`} empty="No earnings yet. They appear after your first full epoch." />
+      {/* row 1: the agent on its scan stage beside the 12-hour block rail */}
+      <div className="dgrid dgrid--1-2">
+        <Panel title={me?.agent ? me.agent.name : "Your agent"} aside={<span className={`state ${running ? "is-on" : ""}`}>{running ? "digging" : "idle"}</span>}>
+          <div className={`agent-stage ${running ? "is-live" : ""}`}>
+            <AgentAvatar kind={me?.agent?.avatar ?? "scout"} size={200} still={!running} />
+            {me?.agent ? (
+              <dl className="agent-stage__tags">
+                <div><dt>Character</dt><dd>{AVATARS.find((a) => a.id === (me.agent?.avatar ?? "scout"))?.name}</dd></div>
+                <div><dt>Rig</dt><dd>{eff?.name ?? chosen?.name ?? "—"}</dd></div>
+                <div><dt>Vein</dt><dd>{symbolOf(asset)}</dd></div>
+              </dl>
+            ) : (
+              <button className="btn" onClick={() => d.go("create")}>Create your agent <span aria-hidden="true">→</span></button>
+            )}
+          </div>
         </Panel>
-        <Panel title="Session">
+        <Panel title="The 12-hour dig" aside={<span className="label">{running ? `${hms(running.end - d.now)} left` : "ready"}</span>}>
           <div className="session">
-            <Ring value={elapsed}>
-              <b>{running ? hms(running.end - d.now) : "idle"}</b>
-              <small>{running ? "left" : "12h session"}</small>
-            </Ring>
+            <HourBlocks progress={elapsed} running={!!running} />
             {running ? (
-              <p className="muted">Mining {symbolOf(running.asset)} on {eff?.name ?? "no tier"}. Rewards settle every hour.</p>
+              <p className="muted">Tapping {symbolOf(running.asset)} with {eff?.name ?? "no rig"}. Each lit block is an hour already settled.</p>
             ) : (
               <button className="btn" onClick={d.startSession} disabled={d.busy || !me?.agent}>Start mining</button>
             )}
           </div>
         </Panel>
       </div>
-      <div className="dgrid dgrid--1-1">
-        <Panel title={me?.agent ? me.agent.name : "Your agent"} aside={<span className={`state ${running ? "is-on" : ""}`}>{running ? "on shift" : "idle"}</span>}>
-          <div className="agent-stage">
-            <AgentAvatar kind={me?.agent?.avatar ?? "scout"} size={220} still={!running} />
-            {me?.agent ? (
-              <dl className="agent-stage__tags">
-                <div><dt>Character</dt><dd>{AVATARS.find((a) => a.id === (me.agent?.avatar ?? "scout"))?.name}</dd></div>
-                <div><dt>Machine</dt><dd>{eff?.name ?? chosen?.name ?? "—"}</dd></div>
-                <div><dt>Mines</dt><dd>{symbolOf(asset)}</dd></div>
-              </dl>
-            ) : (
-              <button className="btn" onClick={() => d.go("create")}>Create your agent <span aria-hidden="true">→</span></button>
-            )}
-          </div>
+      <div className="dgrid dgrid--2-1">
+        <Panel title={`Earned per hour · ${symbolOf(asset)}`} aside={<span className="label">last 24 epochs</span>}>
+          <Chart data={earnedSeries(d.hist, asset, 24, d.now)} unit={symbolOf(asset)} title={`Earned per hour in ${symbolOf(asset)}`} empty="No earnings yet. They appear after your first full epoch." />
         </Panel>
         <Panel title="Recent activity" aside={<button className="linkbtn" onClick={() => d.go("activity")}>All activity →</button>}>
           <Timeline d={d} limit={6} />

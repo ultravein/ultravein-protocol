@@ -5,17 +5,17 @@ import { ASSETS, POOL_ADDRESS, type TierId } from "@/lib/config";
 import { messageFor } from "@/lib/auth";
 import { poolAbi, rh } from "@/lib/chain";
 import { useWallet } from "../wallet";
-import { SilverDefs } from "../iso";
+import { AgentAvatar, SilverDefs } from "../iso";
 import { Activity, CreateAgent, Leaderboard, Machine, Overview, Pools, Portfolio, type Act, type Dash, type Hist, type Me, type Net, type Proof, type Stats } from "./views";
 
 const TABS = [
-  { id: "overview", label: "Overview", icon: "▦", View: Overview },
-  { id: "create", label: "Create agent", icon: "+", View: CreateAgent },
-  { id: "machine", label: "Machine", icon: "⚙", View: Machine },
-  { id: "activity", label: "Activity", icon: "≡", View: Activity },
-  { id: "portfolio", label: "Portfolio", icon: "◔", View: Portfolio },
-  { id: "pools", label: "Pools", icon: "◫", View: Pools },
-  { id: "leaderboard", label: "Leaderboard", icon: "★", View: Leaderboard },
+  { id: "overview", label: "Overview", View: Overview },
+  { id: "create", label: "Create agent", View: CreateAgent },
+  { id: "machine", label: "Machine", View: Machine },
+  { id: "activity", label: "Activity", View: Activity },
+  { id: "portfolio", label: "Portfolio", View: Portfolio },
+  { id: "pools", label: "Pools", View: Pools },
+  { id: "leaderboard", label: "Leaderboard", View: Leaderboard },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
 
@@ -155,15 +155,24 @@ export default function AppPage() {
   };
 
   const View = TABS.find((t) => t.id === tab)!.View;
+  const digging = !!(me?.session && me.session.end > now);
 
   return (
     <div className="dash">
       <SilverDefs />
-      <aside className="dash__side">
-        <nav aria-label="Dashboard">
-          {TABS.map((t) => (
+      {/* command bar: agent status | numbered tabs | wallet, pinned under the site header */}
+      <div className="dash__bar">
+        <div className="dash__agent">
+          <AgentAvatar kind={me?.agent?.avatar ?? "scout"} size={40} still />
+          <div>
+            <b>{me?.agent?.name ?? "No agent yet"}</b>
+            <span className={`state ${digging ? "is-on" : ""}`}>{digging ? "digging" : "idle"}</span>
+          </div>
+        </div>
+        <nav className="dash__tabs" aria-label="Dashboard">
+          {TABS.map((t, i) => (
             <a key={t.id} href={`#${t.id}`} className={tab === t.id ? "is-on" : ""} aria-current={tab === t.id ? "page" : undefined}>
-              <i aria-hidden="true">{t.icon}</i>
+              <i aria-hidden="true">{String(i + 1).padStart(2, "0")}</i>
               {t.label}
             </a>
           ))}
@@ -171,10 +180,9 @@ export default function AppPage() {
         <div className="dash__wallet">
           <span className="label">Wallet</span>
           {conn ? <b>{conn.address.slice(0, 6)}…{conn.address.slice(-4)}</b> : <button className="linkbtn" onClick={() => run(async () => void (await connect()))}>Connect →</button>}
-          <span className="label" style={{ marginTop: 10 }}>Agents mining</span>
-          <b>{stats?.agents.length ?? 0}</b>
+          <span className="label">On the vein · <b>{stats?.agents.length ?? 0}</b></span>
         </div>
-      </aside>
+      </div>
       <div className="dash__main" key={tab}>
         <View d={d} />
         {msg && <p className="toast" role="status">{msg}</p>}
