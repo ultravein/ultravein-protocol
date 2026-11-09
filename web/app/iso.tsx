@@ -33,40 +33,40 @@ export function SilverDefs() {
   return (
     <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
       <defs>
-        {/* line-drawing style: near-flat paper faces, the ink edges carry the form */}
+        {/* faces shaded like the logo; light hairline edges carry the form on the dark field */}
         <linearGradient id="g-top" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#ffffff" />
-          <stop offset="1" stopColor="#fbfaff" />
+          <stop offset="0" stopColor="#c7a6ff" />
+          <stop offset="1" stopColor="#9a5cff" />
         </linearGradient>
         <linearGradient id="g-left" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f7f4fe" />
-          <stop offset="1" stopColor="#efe9fc" />
+          <stop offset="0" stopColor="#7a2cff" />
+          <stop offset="1" stopColor="#5512e0" />
         </linearGradient>
         <linearGradient id="g-right" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#e6ddfa" />
-          <stop offset="1" stopColor="#d9cdf6" />
+          <stop offset="0" stopColor="#3f12b8" />
+          <stop offset="1" stopColor="#24087a" />
         </linearGradient>
         <linearGradient id="g-sheen" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#5b21b6" />
           <stop offset=".35" stopColor="#8b5cf6" />
           <stop offset=".6" stopColor="#c4b5fd" />
-          <stop offset=".8" stopColor="#7c3aed" />
+          <stop offset=".8" stopColor="#9d5cff" />
           <stop offset="1" stopColor="#5b21b6" />
         </linearGradient>
         <linearGradient id="g-liquid" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#a78bfa" />
-          <stop offset="1" stopColor="#7c3aed" />
+          <stop offset="1" stopColor="#9d5cff" />
         </linearGradient>
         <pattern id="g-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <path d="M0 0V4" stroke="#4c1d95" strokeOpacity=".45" />
+          <path d="M0 0V4" stroke="#d4b8ff" strokeOpacity=".45" />
         </pattern>
         <radialGradient id="g-ball" cx=".35" cy=".35">
           <stop offset="0" stopColor="#ddd6fe" />
           <stop offset="1" stopColor="#6d28d9" />
         </radialGradient>
         <radialGradient id="g-glow">
-          <stop offset="0" stopColor="#a78bfa" stopOpacity=".14" />
-          <stop offset="1" stopColor="#a78bfa" stopOpacity="0" />
+          <stop offset="0" stopColor="#8f4dff" stopOpacity=".32" />
+          <stop offset="1" stopColor="#8f4dff" stopOpacity="0" />
         </radialGradient>
       </defs>
     </svg>
@@ -80,14 +80,14 @@ function Box({ at: [x, y, z], size: [w, d, h], wire, hatch, lit }: { at: V; size
   const left: V[] = [[x, y + d, z], [x + w, y + d, z], [x + w, y + d, z + h], [x, y + d, z + h]];
   if (wire)
     return (
-      <g fill={hatch ? "url(#g-hatch)" : "none"} stroke="#141018" strokeOpacity=".75" strokeWidth=".8" strokeDasharray="3 2" strokeLinejoin="round">
+      <g fill={hatch ? "url(#g-hatch)" : "none"} stroke="#e6d8ff" strokeOpacity=".75" strokeWidth=".8" strokeDasharray="3 2" strokeLinejoin="round">
         <polygon points={poly(top)} />
         <polygon points={poly(right)} />
         <polygon points={poly(left)} />
       </g>
     );
   return (
-    <g stroke="#141018" strokeOpacity=".88" strokeWidth=".7" strokeLinejoin="round">
+    <g stroke="#e6d8ff" strokeOpacity=".42" strokeWidth=".7" strokeLinejoin="round">
       <polygon points={poly(left)} fill={lit ? "#8b5cf6" : "url(#g-left)"} />
       <polygon points={poly(right)} fill={lit ? "#6d28d9" : "url(#g-right)"} />
       <polygon points={poly(top)} fill={lit ? "#c4b5fd" : "url(#g-top)"} />
@@ -113,7 +113,7 @@ export function HourBlocks({ progress, running }: { progress: number; running: b
           return (
             <g key={i}>
               <Box at={[x, 0, 0]} size={[S, S, S + 4]} wire />
-              <polygon points={`${ax},${ay} ${bx},${by} ${cx},${cy} ${dx},${dy}`} fill="#7c3aed" fillOpacity=".25" stroke="#7c3aed" strokeWidth=".9">
+              <polygon points={`${ax},${ay} ${bx},${by} ${cx},${cy} ${dx},${dy}`} fill="#9d5cff" fillOpacity=".25" stroke="#9d5cff" strokeWidth=".9">
                 {motion && (
                   <>
                     <animateTransform attributeName="transform" type="translate" values={`0 0; 0 ${-(S + 2)}`} dur="1.6s" repeatCount="indefinite" />
@@ -139,7 +139,7 @@ export function ChipIcon({ size = 26, dim }: { size?: number; dim?: boolean }) {
   const pins = [5, 9, 13, 17];
   return (
     <svg width={size} height={size} viewBox="0 0 22 22" aria-hidden="true" className="cube-icon" opacity={dim ? 0.45 : 1}>
-      <g stroke="#4c1d95" strokeWidth="1.2" strokeLinecap="round">
+      <g stroke="#b994ff" strokeWidth="1.2" strokeLinecap="round">
         {pins.map((p) => (
           <g key={p}>
             <line x1={p} y1="1" x2={p} y2="3.5" />
@@ -149,7 +149,7 @@ export function ChipIcon({ size = 26, dim }: { size?: number; dim?: boolean }) {
           </g>
         ))}
       </g>
-      <rect x="3.5" y="3.5" width="15" height="15" rx="1.5" fill="url(#g-left)" stroke="#141018" strokeOpacity=".7" strokeWidth=".8" />
+      <rect x="3.5" y="3.5" width="15" height="15" rx="1.5" fill="url(#g-left)" stroke="#e6d8ff" strokeOpacity=".7" strokeWidth=".8" />
       <rect x="7" y="7" width="8" height="8" rx=".8" fill="url(#g-top)" />
     </svg>
   );
@@ -165,19 +165,19 @@ function Fan({ c, r, spin, m = TOP_M }: { c: V; r: number; spin: number | null; 
   const arc = Math.PI * 2 * (r + 2);
   return (
     <g transform={`matrix(${m} ${X} ${Y})`}>
-      <circle r={r + 4} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".7" />
-      <circle r={r + 4} fill="none" stroke="#141018" strokeOpacity=".5" strokeWidth="2.2" strokeDasharray="0.6 5.2" />
-      <g fill="none" stroke="#141018" strokeOpacity=".7" strokeWidth=".6" strokeLinecap="round">
+      <circle r={r + 4} fill="#0e0919" stroke="#e6d8ff" strokeOpacity=".85" strokeWidth=".7" />
+      <circle r={r + 4} fill="none" stroke="#e6d8ff" strokeOpacity=".5" strokeWidth="2.2" strokeDasharray="0.6 5.2" />
+      <g fill="none" stroke="#e6d8ff" strokeOpacity=".7" strokeWidth=".6" strokeLinecap="round">
         {blades.map((a) => (
           <path key={a} d={`M${r * 0.26} 0 Q ${r * 0.6} ${-r * 0.32} ${r * 0.9} ${-r * 0.06}`} transform={`rotate(${a})`} />
         ))}
         {spin && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur={`${spin * 2.4}s`} repeatCount="indefinite" />}
       </g>
-      <circle r={r + 2} fill="none" stroke="#7c3aed" strokeWidth="1.6" strokeLinecap="round" strokeDasharray={`${arc * 0.22} ${arc}`}>
+      <circle r={r + 2} fill="none" stroke="#9d5cff" strokeWidth="1.6" strokeLinecap="round" strokeDasharray={`${arc * 0.22} ${arc}`}>
         {spin && <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur={`${spin}s`} repeatCount="indefinite" />}
       </circle>
-      <circle r={r * 0.22} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".7" />
-      <circle r={r * 0.07} fill="#7c3aed" />
+      <circle r={r * 0.22} fill="#0e0919" stroke="#e6d8ff" strokeOpacity=".85" strokeWidth=".7" />
+      <circle r={r * 0.07} fill="#9d5cff" />
     </g>
   );
 }
@@ -198,7 +198,7 @@ export function RigFigure({ agents, idle, label = "ultravein-01" }: { agents: nu
   return (
     <svg viewBox="-240 -112 310 244" className="fig-svg" role="img" aria-label={`An open mining frame with three upright graphics cards. ${agents} VGAs mining.`}>
       <ellipse cx="-90" cy="40" rx="190" ry="100" fill="url(#g-glow)" />
-      <g stroke="#4c1d95" strokeOpacity=".09">
+      <g stroke="#b994ff" strokeOpacity=".12">
         {grid.map(([a, b], i) => {
           const [x1, y1] = xy(a), [x2, y2] = xy(b);
           return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />;
@@ -216,17 +216,17 @@ export function RigFigure({ agents, idle, label = "ultravein-01" }: { agents: nu
           <Box at={[x, CY, CZ]} size={[CW, CD, CH]} />
           {(() => {
             const [ax, ay] = xy([x, CY + CD, CZ + 3]), [bx, by] = xy([x + CW, CY + CD, CZ + 3]);
-            return <line x1={ax} y1={ay} x2={bx} y2={by} stroke="#7c3aed" strokeWidth="2.4" />;
+            return <line x1={ax} y1={ay} x2={bx} y2={by} stroke="#9d5cff" strokeWidth="2.4" />;
           })()}
           {Array.from({ length: 6 }, (_, k) => {
             const [ax, ay] = xy([x + 2, CY + 6 + k * 8, CZ + CH]), [bx, by] = xy([x + CW - 2, CY + 6 + k * 8, CZ + CH]);
-            return <line key={k} x1={ax} y1={ay} x2={bx} y2={by} stroke="#141018" strokeOpacity=".45" strokeWidth=".6" />;
+            return <line key={k} x1={ax} y1={ay} x2={bx} y2={by} stroke="#e6d8ff" strokeOpacity=".45" strokeWidth=".6" />;
           })}
           <Fan c={[x + CW, CY + CD / 2, CZ + CH / 2]} r={19} spin={spin && spin * (1 + i * 0.09)} m={SIDE_M} />
         </g>
       ))}
       {/* data packets running along the base's front edge */}
-      <line x1={ledA[0]} y1={ledA[1]} x2={ledB[0]} y2={ledB[1]} stroke="#7c3aed" strokeWidth="2.2" strokeDasharray="3 21" strokeLinecap="square">
+      <line x1={ledA[0]} y1={ledA[1]} x2={ledB[0]} y2={ledB[1]} stroke="#9d5cff" strokeWidth="2.2" strokeDasharray="3 21" strokeLinecap="square">
         {motion && <animate attributeName="stroke-dashoffset" from="0" to="-48" dur="0.9s" repeatCount="indefinite" />}
       </line>
       {/* a scan plane sweeps the rack end to end: the hashrate, drawn as a laser pass */}
@@ -238,11 +238,11 @@ export function RigFigure({ agents, idle, label = "ultravein-01" }: { agents: nu
         return (
           <g opacity={motion ? 1 : 0}>
             {sweep}
-            <polygon points={`${a.join(",")} ${b.join(",")} ${c.join(",")} ${d.join(",")}`} fill="#7c3aed" fillOpacity=".06" />
-            <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#7c3aed" strokeWidth="1.2" />
-            <line x1={d[0]} y1={d[1]} x2={c[0]} y2={c[1]} stroke="#7c3aed" strokeWidth=".6" strokeDasharray="2 3" />
-            <circle cx={a[0]} cy={a[1]} r="2" fill="#7c3aed" />
-            <circle cx={b[0]} cy={b[1]} r="2" fill="#7c3aed" />
+            <polygon points={`${a.join(",")} ${b.join(",")} ${c.join(",")} ${d.join(",")}`} fill="#9d5cff" fillOpacity=".06" />
+            <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#9d5cff" strokeWidth="1.2" />
+            <line x1={d[0]} y1={d[1]} x2={c[0]} y2={c[1]} stroke="#9d5cff" strokeWidth=".6" strokeDasharray="2 3" />
+            <circle cx={a[0]} cy={a[1]} r="2" fill="#9d5cff" />
+            <circle cx={b[0]} cy={b[1]} r="2" fill="#9d5cff" />
           </g>
         );
       })()}
@@ -258,8 +258,8 @@ function Roller({ c, r, motion }: { c: V; r: number; motion: boolean }) {
   const [X, Y] = xy(c);
   return (
     <g transform={`matrix(${FRONT_M} ${X} ${Y})`}>
-      <circle r={r}fill="url(#g-right)" stroke="#141018" strokeOpacity=".7" strokeWidth=".7" />
-      <g stroke="#141018" strokeOpacity=".6" strokeWidth=".7">
+      <circle r={r}fill="url(#g-right)" stroke="#e6d8ff" strokeOpacity=".7" strokeWidth=".7" />
+      <g stroke="#e6d8ff" strokeOpacity=".6" strokeWidth=".7">
         <line x1={-r} y1="0" x2={r} y2="0" />
         <line x1="0" y1={-r} x2="0" y2={r} />
         {motion && <animateTransform attributeName="transform" type="rotate" from="0" to="-360" dur="1.4s" repeatCount="indefinite" />}
@@ -286,7 +286,7 @@ export function MachineFigure() {
   return (
     <svg viewBox="-358 -84 436 270" className="fig-svg" role="img" aria-label="A sorting machine: rigs ride a conveyor through five inspection stations into PASSED; bots are kicked off into REJECTED.">
       <ellipse cx="-140" cy="50" rx="230" ry="110" fill="url(#g-glow)" />
-      <g stroke="#4c1d95" strokeOpacity=".08">
+      <g stroke="#b994ff" strokeOpacity=".1">
         {grid.map(([a, b], i) => {
           const [x1, y1] = xy(a), [x2, y2] = xy(b);
           return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />;
@@ -309,7 +309,7 @@ export function MachineFigure() {
       {[26, 35, 44].map((y) => {
         const [x1, y1] = xy([BELT[0] + 4, y, 24]), [x2, y2] = xy([BELT[1] - 4, y, 24]);
         return (
-          <line key={y} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#1e1534" strokeOpacity=".55" strokeWidth="1.4" strokeDasharray="2 9">
+          <line key={y} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#04020a" strokeOpacity=".55" strokeWidth="1.4" strokeDasharray="2 9">
             {motion && <animate attributeName="stroke-dashoffset" from="0" to="-22" dur="0.36s" repeatCount="indefinite" />}
           </line>
         );
@@ -319,7 +319,7 @@ export function MachineFigure() {
 
       {/* intake hopper */}
       <Box at={[-24, 16, 42]} size={[26, 38, 22]} />
-      <polygon points={poly([[-20, 20, 64], [-2, 20, 64], [-2, 50, 64], [-20, 50, 64]])} fill="#1e1534" stroke="#141018" strokeOpacity=".5" strokeWidth=".6" />
+      <polygon points={poly([[-20, 20, 64], [-2, 20, 64], [-2, 50, 64], [-20, 50, 64]])} fill="#04020a" stroke="#e6d8ff" strokeOpacity=".5" strokeWidth=".6" />
 
       {/* items on the belt */}
       {BATCH.map((kind, i) => {
@@ -328,8 +328,8 @@ export function MachineFigure() {
           <Box at={[-6, -6, 0]} size={[12, 12, 12]} wire />
         ) : (
           <g>
-            <circle cx="0" cy="-5" r="5.5" fill="#ffffff" stroke="#7c3aed" strokeWidth="1.3" />
-            <circle cx="0" cy="-5" r="1.8" fill="#7c3aed" />
+            <circle cx="0" cy="-5" r="5.5" fill="#0e0919" stroke="#9d5cff" strokeWidth="1.3" />
+            <circle cx="0" cy="-5" r="1.8" fill="#9d5cff" />
           </g>
         );
         if (!motion) {
@@ -367,7 +367,7 @@ export function MachineFigure() {
             {(() => {
               const [ax, ay] = xy([mid, 20, 57]), [bx, by] = xy([mid, 50, 57]);
               return (
-                <line x1={ax} y1={ay} x2={bx} y2={by} stroke="#7c3aed" strokeWidth="1.3" opacity={motion ? 0 : 0.5}>
+                <line x1={ax} y1={ay} x2={bx} y2={by} stroke="#9d5cff" strokeWidth="1.3" opacity={motion ? 0 : 0.5}>
                   {motion && (
                     <>
                       <animateTransform attributeName="transform" type="translate" values="0 0; 0 32" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />
@@ -380,8 +380,8 @@ export function MachineFigure() {
             <Box at={[x, 50, 24]} size={[22, 8, 34]} />
             <Box at={[x, 12, 58]} size={[22, 46, 10]} />
             <Box at={[x + 7, 30, 68]} size={[8, 8, 3]} />
-            <circle cx={cx} cy={cy} r="2" fill="#7c3aed" />
-            <circle cx={cx} cy={cy} r="2" fill="none" stroke="#7c3aed" strokeWidth=".8" opacity="0">
+            <circle cx={cx} cy={cy} r="2" fill="#9d5cff" />
+            <circle cx={cx} cy={cy} r="2" fill="none" stroke="#9d5cff" strokeWidth=".8" opacity="0">
               {motion && (
                 <>
                   <animate attributeName="r" values="2; 9" dur="1.6s" begin={`${k * 0.32}s`} repeatCount="indefinite" />
@@ -420,7 +420,7 @@ export function TanksFigure({ pools }: { pools: { symbol: string; balance: bigin
   const W = 64, GAP = 40, TOP = 56, BOT = 270, X0 = 34;
   return (
     <svg viewBox="0 0 560 360" className="fig-svg" role="img" aria-label={`Pool levels: ${pools.map((p) => p.symbol).join(", ")}`}>
-      <path d={`M${X0 + W / 2} ${BOT + 14} V 322 H ${X0 + 4 * (W + GAP) + W / 2}`} fill="none" stroke="#4c1d95" strokeOpacity=".25" />
+      <path d={`M${X0 + W / 2} ${BOT + 14} V 322 H ${X0 + 4 * (W + GAP) + W / 2}`} fill="none" stroke="#b994ff" strokeOpacity=".25" />
       {pools.map((p, i) => {
         const x = X0 + i * (W + GAP);
         const level = max > 0n && p.balance > 0n ? Math.max(0.03, Number((p.balance * 1000n) / max) / 1000) : 0;
@@ -428,12 +428,12 @@ export function TanksFigure({ pools }: { pools: { symbol: string; balance: bigin
         return (
           <g key={p.symbol}>
             <text x={x + W / 2} y={TOP - 30} className="fig-label" style={{ fontSize: 11 }}>{p.symbol}</text>
-            <rect x={x} y={TOP} width={W} height={BOT - TOP} fill="#ffffff" stroke="#141018" strokeOpacity=".85" strokeWidth=".8" />
+            <rect x={x} y={TOP} width={W} height={BOT - TOP} fill="#0e0919" stroke="#e6d8ff" strokeOpacity=".85" strokeWidth=".8" />
             {level > 0 && (
               <>
                 <rect x={x + 5} y={fillTop} width={W - 10} height={BOT - fillTop - 5} fill="url(#g-liquid)" opacity=".75" />
                 <rect x={x + 5} y={fillTop} width={W - 10} height={BOT - fillTop - 5} fill="url(#g-hatch)" opacity=".5" />
-                <line x1={x - 6} y1={fillTop} x2={x + W + 6} y2={fillTop} stroke="#7c3aed" strokeWidth="1" strokeDasharray="2 2" />
+                <line x1={x - 6} y1={fillTop} x2={x + W + 6} y2={fillTop} stroke="#9d5cff" strokeWidth="1" strokeDasharray="2 2" />
                 {/* bubbles rise through the liquid: the pool is live */}
                 {motion &&
                   [0.25, 0.55, 0.8].map((k, j) => (
@@ -445,12 +445,12 @@ export function TanksFigure({ pools }: { pools: { symbol: string; balance: bigin
               </>
             )}
             {[0.25, 0.5, 0.75].map((k) => (
-              <line key={k} x1={x + W - 10} y1={BOT - k * (BOT - TOP)} x2={x + W} y2={BOT - k * (BOT - TOP)} stroke="#141018" strokeOpacity=".35" />
+              <line key={k} x1={x + W - 10} y1={BOT - k * (BOT - TOP)} x2={x + W} y2={BOT - k * (BOT - TOP)} stroke="#e6d8ff" strokeOpacity=".35" />
             ))}
             {/* hourly release flows out to the miners' bus */}
-            <line x1={x + W / 2} y1={BOT} x2={x + W / 2} y2={BOT + 14} stroke="#4c1d95" strokeOpacity=".5" />
+            <line x1={x + W / 2} y1={BOT} x2={x + W / 2} y2={BOT + 14} stroke="#b994ff" strokeOpacity=".5" />
             {motion && level > 0 && (
-              <path d={`M${x + W / 2} ${BOT} V 322 H ${X0 + 4 * (W + GAP) + W / 2 + 20}`} fill="none" stroke="#7c3aed" strokeWidth="3" strokeDasharray="3 21" strokeLinecap="square">
+              <path d={`M${x + W / 2} ${BOT} V 322 H ${X0 + 4 * (W + GAP) + W / 2 + 20}`} fill="none" stroke="#9d5cff" strokeWidth="3" strokeDasharray="3 21" strokeLinecap="square">
                 <animate attributeName="stroke-dashoffset" from="0" to="-48" dur="1.4s" repeatCount="indefinite" />
               </path>
             )}

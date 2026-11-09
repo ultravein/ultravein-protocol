@@ -12,10 +12,10 @@ type Spec = { fans: number; shroud: number; metalness: number; roughness: number
 // RTX cards are consumer coolers with open fans; the A100 is a sealed blower; the H100 is passive
 // fins with a light bar running its length.
 const SPECS: Record<string, Spec> = {
-  rtx3060: { fans: 2, shroud: 0xf3effb, metalness: 0.25, roughness: 0.55, fanSpeed: 7, motion: "stutter", len: 2.5 },
-  rtx4090: { fans: 3, shroud: 0xe7defa, metalness: 0.35, roughness: 0.45, fanSpeed: 11, motion: "steady", len: 3.1 },
-  a100: { fans: 1, shroud: 0xd8ccf5, metalness: 0.55, roughness: 0.35, fanSpeed: 16, motion: "scan", len: 2.9 },
-  h100: { fans: 0, shroud: 0xc9b8f2, metalness: 0.7, roughness: 0.28, fanSpeed: 0, motion: "surge", len: 3.0 },
+  rtx3060: { fans: 2, shroud: 0x6a22ff, metalness: 0.25, roughness: 0.55, fanSpeed: 7, motion: "stutter", len: 2.5 },
+  rtx4090: { fans: 3, shroud: 0x7a2cff, metalness: 0.35, roughness: 0.45, fanSpeed: 11, motion: "steady", len: 3.1 },
+  a100: { fans: 1, shroud: 0x4a14c8, metalness: 0.55, roughness: 0.35, fanSpeed: 16, motion: "scan", len: 2.9 },
+  h100: { fans: 0, shroud: 0x2e0c8f, metalness: 0.7, roughness: 0.28, fanSpeed: 0, motion: "surge", len: 3.0 },
 };
 
 const DEPTH = 1.25;
@@ -28,11 +28,11 @@ function buildCard(THREE: typeof T, RoundedBox: typeof import("three/examples/js
   const mats = {
     shroud: new THREE.MeshStandardMaterial({ color: spec.shroud, metalness: spec.metalness, roughness: spec.roughness }),
     rim: new THREE.MeshStandardMaterial({ color: 0xe8e4f2, metalness: 0.85, roughness: 0.25 }),
-    blade: new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.2, roughness: 0.5 }),
+    blade: new THREE.MeshStandardMaterial({ color: 0xe2d1ff, metalness: 0.2, roughness: 0.45 }),
     dark: new THREE.MeshStandardMaterial({ color: 0x1e1534, metalness: 0.2, roughness: 0.75 }),
     board: new THREE.MeshStandardMaterial({ color: 0x241a3d, metalness: 0.1, roughness: 0.9 }),
     gold: new THREE.MeshStandardMaterial({ color: 0xe0a33c, metalness: 0.95, roughness: 0.3 }),
-    led: new THREE.MeshBasicMaterial({ color: 0x7c3aed, transparent: true, opacity: 0.85 }),
+    led: new THREE.MeshBasicMaterial({ color: 0xc9a7ff, transparent: true, opacity: 0.9 }),
     spark: new THREE.MeshBasicMaterial({ color: 0xffffff }),
   };
   const add = (geo: T.BufferGeometry, mat: T.Material, x = 0, y = 0, z = 0) => {
@@ -154,11 +154,11 @@ export function Gpu3D({ tier, running, label }: { tier: string; running: boolean
       const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
       scene.environment = envTex;
       scene.environmentIntensity = 0.55;
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x8b7fb0, 2.3));
+      scene.add(new THREE.HemisphereLight(0xe8dcff, 0x1a0b3a, 2.1));
       const key = new THREE.DirectionalLight(0xffffff, 1.9);
       key.position.set(1.5, 3, 2.5);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0xc4b5fd, 0.9);
+      const fill = new THREE.DirectionalLight(0x8f4dff, 1.6);
       fill.position.set(-2.5, 1.2, -1.5);
       scene.add(fill);
       const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 80);

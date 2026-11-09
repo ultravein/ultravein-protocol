@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
+export const viewport = { themeColor: "#07040d", colorScheme: "dark" };
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -30,15 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <header className="site-header">
             <div className="site-header__bar">
               <a href={siteLink("/")} className="brand" aria-label="Ultravein home">
-                <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-                  <path d="M2 4l9 15 9-15" fill="none" stroke="url(#brand-g)" strokeWidth="2.4" strokeLinejoin="round" />
-                  <defs>
-                    <linearGradient id="brand-g" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0" stopColor="#8b5cf6" />
-                      <stop offset="1" stopColor="#4c1d95" />
-                    </linearGradient>
-                  </defs>
-                </svg>
+                {/* eslint-disable-next-line @next/next/no-img-element -- a 36px static mark, no optimisation needed */}
+                <img src="/logo.png" width={36} height={36} alt="" className="brand__mark" />
                 Ultravein
               </a>
               <nav className="site-nav" aria-label="Main">
