@@ -1,0 +1,15 @@
+{
+  "name": "ultravein-protocol",
+  "private": true,
+  "description": "Deploy a virtual VGA on Robinhood Chain, run it from your terminal, and mine ETH or tokenized stocks every hour.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm --prefix web run dev",
+    "build": "npm --prefix web run build",
+    "test": "npm run test:contracts && npm run test:web && npm run rig:check",
+    "test:contracts": "cd contracts && forge test",
+    "test:web": "npm --prefix web test",
+    "rig:sync": "node -e \"require('fs').copyFileSync('rig/rig.mjs','web/public/rig.mjs')\"",
+    "rig:check": "node -e \"const f=require('fs');if(!f.readFileSync('rig/rig.mjs').equals(f.readFileSync('web/public/rig.mjs'))){console.error('web/public/rig.mjs is out of date: npm run rig:sync');process.exit(1)}\""
+  }
+}

@@ -10,6 +10,5 @@ web/*.tsbuildinfo
 .env
 web/.env.local
 web/AGENTS.md
-web/AGENTS.md
-
 docs/superpowers/
+contracts/verify-miningpool.json
